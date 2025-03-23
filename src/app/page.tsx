@@ -7,7 +7,7 @@ import { Trophy } from "lucide-react";
 
 export default async function Home() {
   const session = await auth();
-
+  
   return (
     <HydrateClient>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-body relative">
@@ -27,7 +27,7 @@ export default async function Home() {
           <div className="flex flex-col items-center gap-2">
             <div className="flex flex-col items-center justify-center gap-4">
               <p className="text-center text-xl">
-                {session && <span>Logged in as {session.user?.name ?? "anonymous"}</span>}
+                {session?.user && <span>Logged in as {session.user?.name ?? "anonymous"}</span>}
               </p>
               <Link
                 href={session ? "/api/auth/signout" : "/api/auth/signin"}

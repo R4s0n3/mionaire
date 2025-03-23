@@ -9,7 +9,10 @@ import LeaderboardList from "./_components/leaderboard-list";
 export default async function Leaderboard() {
   const session = await auth();
   void api.game.getScores.prefetch()
-  void api.game.getPlayerRank.prefetch()
+  
+  if(session?.user){
+    void api.game.getPlayerRank.prefetch()
+  }
 
   return (
     <HydrateClient>
