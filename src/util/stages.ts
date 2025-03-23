@@ -1,0 +1,17 @@
+export const stages = [
+    { amount: 100 },
+    { amount: 200 },
+    { amount: 300},
+    { amount: 500 },
+    { amount: 1000 },
+    { amount: 2000 },
+    { amount: 4000 },
+    { amount: 8000 },
+    { amount: 16000 },
+    { amount: 32000 },
+    { amount: 64000 },
+    { amount: 125000 },
+    { amount: 250000 },
+    { amount: 500000 },
+    { amount: 1000000 },
+];

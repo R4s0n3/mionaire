@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-quantico-sans), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-body: #f1f1f1;
+
+  --color-primary: #123456;
+  --color-primary-light: #345678;  /* Lighter version */
+  --color-primary-dark: #0f1a2b;   /* Darker version */
+
+  --color-secondary: #40E0D0;       /* Turquoise */
+  --color-secondary-light: #A0FFFF; /* Lighter turquoise */
+  --color-secondary-dark: #00B2A9;  /* Darker turquoise */
+
+  --color-highlight-purple: #A45EB5;
+  --color-highlight-gold: #FEDD7D; 
+
+
+
+  /* Custom animation for slow rotation */
+  --animate-spin-slow: 30s linear infinite both running spin-slow;
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
+/* New radial gradient class */
+.radial-gradient-highlight {
+  background: radial-gradient(circle, rgba(164, 94, 181, 0.25) 0%, transparent 60%, transparent 100%);
+}
