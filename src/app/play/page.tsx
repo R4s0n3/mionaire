@@ -6,7 +6,7 @@ import PickMode from "./_components/pick-mode";
 import Game from "./_components/game";
 import { redirect } from "next/navigation";
 
-export default async function Home({
+export default async function GamePage({
     searchParams,
   }: {
     searchParams: Promise<{ game: string }>
