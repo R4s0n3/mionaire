@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/server/auth";
 import { api, HydrateClient } from "@/trpc/server";
-import { Home } from "lucide-react";
+import { HomeIcon } from "lucide-react";
 import PlayerRank from "./_components/player-rank";
 import LeaderboardList from "./_components/leaderboard-list";
 
@@ -9,7 +9,7 @@ import LeaderboardList from "./_components/leaderboard-list";
 export default async function Leaderboard() {
   const session = await auth();
   void api.game.getScores.prefetch()
-  
+
   if(session?.user){
     void api.game.getPlayerRank.prefetch()
   }
@@ -18,7 +18,7 @@ export default async function Leaderboard() {
     <HydrateClient>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-body relative">
       <Link href="/" className="absolute top-4 right-4">
-      <Home className="size-8 text-body" />
+      <HomeIcon className="size-8 text-body" />
       </Link>
       <div className="w-full max-w-xl flex justify-center items-center flex-col gap-8">
 

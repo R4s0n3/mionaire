@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Home, SidebarClose, SidebarOpen } from "lucide-react"
+import { HomeIcon, SidebarClose, SidebarOpen } from "lucide-react"
 import { stages } from "@/util/stages"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -132,7 +132,7 @@ export default function SideBar({ currentStage }: { currentStage: number }) {
 
       <motion.div className="p-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
         <Link href="/">
-          <Home className="size-8" />
+          <HomeIcon className="size-8" />
         </Link>
       </motion.div>
     </motion.div>

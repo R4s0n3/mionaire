@@ -7,7 +7,7 @@ import { Trophy } from "lucide-react";
 
 export default async function Home() {
   const session = await auth();
-  
+  console.log("DA SESH: ", session)
   return (
     <HydrateClient>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-body relative">
