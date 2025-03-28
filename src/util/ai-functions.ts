@@ -1,12 +1,11 @@
 import OpenAI from "openai";
 import { env } from "@/env";
 import { system_prompt } from "./system-prompt";
-import demo_examples from './examples'
-import { shuffle } from "./functions";
+
 
 const openai = new OpenAI({
-        baseURL: 'https://api.deepseek.com',
-        apiKey: env.DEEPSEEK_API_KEY
+        baseURL: 'https://api.aimlapi.com/v1',
+        apiKey: "db75b81aacdf47ba96afdae6e0963dc2"
 });
 
 export type GenQuestion = {
@@ -18,43 +17,48 @@ export type GenQuestion = {
     answer: string,
 }
 
-export default async function generateQuestion({
-    stage,
-    mode,
-    questions }: { stage: number, mode:string, questions: GenQuestion[]}): Promise<GenQuestion> {
-    const shuffledExamples = shuffle(demo_examples)
+export default async function generateQuestion({mode = "NORMAL"}): Promise<GenQuestion[]> {
 
     let result
     const prompt = `
                 ${system_prompt}
-                Output: Deliver in JSON format.
 
-                GOOD EXAMPLES:
-                ${JSON.stringify(shuffledExamples.slice(0,15))}
+                ** Always create 15 unique questions.
+
+                ** ${mode}
+                
+                ** Output: Deliver in JSON format.
+                type JsonOutput = {
+                    question: string;
+                    A: string;
+                    B: string;
+                    C: string;
+                    stage: number; // key 1 - 15
+                    D: string;
+                    answer: string;
+                }[]
             `
         const completion = await openai.chat.completions.create({
         messages: [
-            { role: "system", content: prompt },
-            { role: "user", content: `
-                currentStage: ${stage}
-                mode: ${mode}
-
-                CURRENT GAME QUESTIONS::
-                ${JSON.stringify(questions)}
-                ` },
+            { role: "system", content: prompt }
         ],
-        temperature: 1.23,
-        max_tokens: 300,
-        model: "deepseek-chat",
+        temperature:0.6,
+        frequency_penalty: 0,
+        presence_penalty:0,
+        max_tokens: 8000,
+        model: "gpt-4o",
         response_format: { "type": "json_object",  }    
       });
 
       if (completion.choices[0]?.message.content) {
-          result = JSON.parse(completion.choices[0].message.content) as GenQuestion
+          result = JSON.parse(completion.choices[0].message.content) as ResultObject 
       } else {
         throw new Error("No valid response from OpenAI API.");
         }
-      
-      return result
+      return result.questions
 
+}
+
+type ResultObject = {
+    questions: GenQuestion[]
 }

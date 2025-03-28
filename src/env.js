@@ -26,7 +26,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_ADSENSE_CLIENT_ID: z.string(),
   },
 
   /**
@@ -39,6 +39,7 @@ export const env = createEnv({
     AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,
     AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
+    NEXT_PUBLIC_ADSENSE_CLIENT_ID:process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID,
     NODE_ENV: process.env.NODE_ENV,
   },
   /**

@@ -112,40 +112,35 @@ export const gameRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
 
     const { mode } = input
+    // 1. Generate questions and transform them in one go using map
+    const generatedQuestions = await generateQuestion({mode});
+    const newQuestions = generatedQuestions.map((question, index) => ({
+      question: question.question,
+      A: question.A,
+      B: question.B,
+      C: question.C,
+      D: question.D,
+      answer: question.answer,
+      mode,
+      stage: index + 1
+    }));
 
+    // 2. Use prisma's create with nested writes in a single transaction
     const createdGame = await ctx.db.game.create({
-        data:{
-            stage:1,
-            mode,
-            player:{
-                connect:{
-                    id:ctx.session.user.id
-                }
-            }
-        }
-    })
-
-     const generatedQuestion = await generateQuestion({ stage: 1 , mode, questions: []})
-     const { question, A, B, C, D, answer } = generatedQuestion
-
-     await ctx.db.question.create({
-        data: {
-          question,
-          A,
-          B,
-          C,
-          D,
-          answer,
-          mode,
-          stage : 1,
-          games: {
-            connect:{
-              id: createdGame.id
-            }
+      data: {
+        stage: 1,
+        mode,
+        player: {
+          connect: {
+            id: ctx.session.user.id
           }
         },
-      });
+        questions: {
+          create:  newQuestions
+        }
+      }
+    });
 
-      return createdGame.id
+    return createdGame.id;
     }),
 });

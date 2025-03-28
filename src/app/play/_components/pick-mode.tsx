@@ -21,12 +21,15 @@ export default function PickMode(){
     }
 
     if(isPending){
-        return <LoadingSpinner />
+        return <div className="w-full flex flex-col items-center justify-center gap-4 ">
+            <LoadingSpinner />
+            <h5>Creating game...</h5>
+            </div>
     }
 
     return <div className="w-full max-w-xl flex justify-center items-center flex-col gap-8">
         <h2 className="text-4xl font-bold">PICK A MODE</h2>
-        <div className="w-full flex justify-between gap-8 flex-col lg:flex-row ">
+        <div className="w-full flex justify-between gap-8 p-4 flex-col lg:flex-row ">
         {["EASY", "NORMAL", "HARD"].map((mode, idx)=> <button
         onClick={handleClickedButton}
         type="button"

@@ -4,7 +4,6 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "@/server/api/trpc";
-import generateQuestion from "@/util/ai-functions";
 
 export const questionRouter = createTRPCRouter({
   eval: protectedProcedure
@@ -24,12 +23,13 @@ export const questionRouter = createTRPCRouter({
         questions:true
       }
      })
+
      if(existingGame?.endedAt !== null){
-      throw new Error("GAME FINISHED ALREADY")
+      throw new Error("START A NEW GAME. — GAME ENDED.")
      }
      
      if(!existingGame){
-      throw new Error("NO GAME FOUND!")
+      throw new Error("START A NEW GAME. — NO GAME.")
      }
 
      const gameQuestions = existingGame.questions
@@ -49,7 +49,7 @@ export const questionRouter = createTRPCRouter({
           }
         })
 
-        throw new Error("WRONG ANSWER, GAME OVER!")
+      return false
      }
 
      if(stage === 15){
@@ -65,7 +65,7 @@ export const questionRouter = createTRPCRouter({
        throw new Error("CONGRATULATIONS! YOU ARE THE MIONAIRE!!")
      }
 
-     const syncedGame = await ctx.db.game.update({
+     await ctx.db.game.update({
       where:{
         id:gameId
       },
@@ -76,47 +76,8 @@ export const questionRouter = createTRPCRouter({
       }
      })
 
-     const mode = syncedGame.mode
-     const newStage = syncedGame.stage
-
-     const generatedQuestion = await generateQuestion({ stage:newStage, mode, questions: gameQuestions.map(q => {
-      const { A, B, C, D, question, answer } = q
-
-      return {
-        question,
-        answer,
-        A, B, C, D
-      }
-
-     }) })
-     const { question, A, B, C, D, answer } = generatedQuestion
-
-     const createdQuestion = await ctx.db.question.create({
-        data: {
-          question,
-          A,
-          B,
-          C,
-          D,
-          answer,
-          mode,
-          stage: newStage,
-          games: {
-            connect:{
-              id: gameId
-            }
-          }
-        },
-        select:{
-          question:true,
-          stage:true,
-          A:true,
-          B:true,
-          C:true,
-          D:true
-        },
-      });
      
-      return createdQuestion
+     return true
+
     }),
 });
