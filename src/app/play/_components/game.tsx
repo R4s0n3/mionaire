@@ -88,7 +88,7 @@ export default function Game({ game }: GameProps) {
       <div className="flex w-full max-w-screen-xl flex-col items-center justify-center gap-16 p-4">
         <div className="flex w-full flex-col items-center justify-center gap-4 text-center">
           <h2 className="font-black uppercase">Stage {currentStage}</h2>
-          <h5 className="text-3xl font-bold lg:text-5xl">{currentQuestion.question}</h5>
+          <h5 className="text-2xl font-bold lg:text-4xl">{currentQuestion.question}</h5>
         </div>
         <div className="grid w-full grid-cols-2 gap-8">
           {answers.map(({ key, value }) => (
