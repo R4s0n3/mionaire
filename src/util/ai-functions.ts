@@ -1,63 +1,76 @@
 import OpenAI from "openai";
 import { system_prompt } from "./system-prompt";
-
+import { env } from "@/env";
 
 const openai = new OpenAI({
-        baseURL: 'https://api.aimlapi.com/v1',
-        apiKey: "db75b81aacdf47ba96afdae6e0963dc2"
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: env.OPENROUTER_API_KEY,
+    // Add default timeout to prevent hanging
+    timeout: 30000, // 30 seconds
 });
 
 export type GenQuestion = {
-    question: string,
-    A: string,
-    B: string,
-    C: string,
-    D: string,
-    answer: string,
-}
+    question: string;
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+    stage: number;
+    answer: string;
+};
 
-export default async function generateQuestion({mode = "NORMAL"}): Promise<GenQuestion[]> {
+// Predefine constants outside the function to avoid repeated creation
+const DEFAULT_MODE = "NORMAL";
+const QUESTION_COUNT = 15;
+const MODEL = "openrouter/quasar-alpha";
 
-    let result
-    const prompt = `
-                ${system_prompt}
+export default async function generateQuestion({ mode = DEFAULT_MODE } = {}): Promise<GenQuestion[]> {
+    try {
+        // Minimize string interpolation by pre-building the prompt
+        const prompt = `${system_prompt}\n\n` +
+            `** Always create ${QUESTION_COUNT} unique questions.\n` +
+            `** ${mode}\n` +
+            `** Output: Deliver in JSON format always!\n\n` +
+            `type JsonOutput = {
+                question: string;
+                A: string;
+                B: string;
+                C: string;
+                stage: number;
+                D: string;
+                answer: string;
+            }[]`;
 
-                ** Always create 15 unique questions.
-
-                ** ${mode}
-                
-                ** Output: Deliver in JSON format.
-                type JsonOutput = {
-                    question: string;
-                    A: string;
-                    B: string;
-                    C: string;
-                    stage: number; // key 1 - 15
-                    D: string;
-                    answer: string;
-                }[]
-            `
         const completion = await openai.chat.completions.create({
-        messages: [
-            { role: "system", content: prompt }
-        ],
-        temperature:0.6,
-        frequency_penalty: 0,
-        presence_penalty:0,
-        max_tokens: 8000,
-        model: "gpt-4o",
-        response_format: { "type": "json_object",  }    
-      });
+            messages: [{ role: "system", content: prompt }],
+            temperature: 0.6,
+            frequency_penalty: 0,
+            presence_penalty: 0,
+            max_tokens: 4000,
+            model: MODEL,
+            response_format: { type: "json_object" },
+            // Add stream: false to ensure complete response
+            stream: false,
+        });
 
-      if (completion.choices[0]?.message.content) {
-          result = JSON.parse(completion.choices[0].message.content) as ResultObject 
-      } else {
-        throw new Error("No valid response from OpenAI API.");
+        console.log("AI RESPONSE: ",completion)
+        const content = completion.choices[0]?.message.content;
+        if (!content) {
+            throw new Error("No valid response from API");
         }
-      return result.questions
+        console.log("AI CONTENT: ",content)
+        const result = JSON.parse(content) as { questions: GenQuestion[] };
+        console.log("PARSED RESULT: ", result)
+        
+        // Validate the response structure
+        if (!result.questions || !Array.isArray(result.questions) || result.questions.length !== QUESTION_COUNT) {
+            throw new Error(`Invalid response format or incorrect number of questions`);
+        }
 
-}
-
-type ResultObject = {
-    questions: GenQuestion[]
+        return result.questions;
+    } catch (error) {
+        // Improve error handling
+        console.error("Failed to generate questions:", error);
+        throw error instanceof Error ? error : new Error("Unknown error in question generation");
+    }
 }

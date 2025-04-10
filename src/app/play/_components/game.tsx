@@ -18,6 +18,7 @@ interface Answer {
 export default function Game({ game }: GameProps) {
   const [error, setError] = useState<string | null>(null)
   const [pickedAnswer, setPickedAnswer] = useState<string>('')
+  const [rightAnswer, setRightAnswer] = useState<string>('')
 
   // Fetch game data
   const { data, isLoading, error: queryError } = api.game.getGame.useQuery(game)
@@ -25,13 +26,21 @@ export default function Game({ game }: GameProps) {
   const currentStage = data?.stage ?? 1
   const utils = api.useUtils()
 
-  const { mutateAsync: evaluateAnswer, isPending: isEvaluating } = api.question.eval.useMutation({
-    onSuccess: async (isCorrect) => {
-      if (isCorrect) {
-        setPickedAnswer('')
-        await utils.game.getGame.invalidate(game)
-    } else {
-        setError('Game Over - False Answer')
+  const { mutate: evaluateAnswer, isPending: isEvaluating } = api.question.eval.useMutation({
+    onSuccess: async (data) => {
+      setRightAnswer(data.answer)
+      if (data.isRight) {
+        setTimeout(() => {
+          setRightAnswer('')
+          setPickedAnswer('')
+          void utils.game.getGame.invalidate(game)
+        }, 1000)
+      } else {
+        setTimeout(() => {
+          setRightAnswer('')
+          setPickedAnswer('')
+        setError(`Game Over - False Answer! \n Right Answer: ${data.answer}`)
+      }, 1000)
       }
     },
     onError: (err) => setError(err.message),
@@ -56,7 +65,7 @@ export default function Game({ game }: GameProps) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-8 text-center">
         
-        <h5 className="text-3xl font-bold lg:text-5xl">{error ?? queryError?.message}</h5>
+        <h5 className="text-3xl flex flex-col gap-2 font-bold lg:text-5xl">{error?.split("\n").map((i,idx) => <span key={idx}>{i}</span>) ?? queryError?.message}</h5>
         <div className="flex gap-4">
           <Link href="/play" className="flex items-center justify-center rounded-full border-2 border-body bg-primary-dark p-3 px-6 text-xl hover:border-primary-light hover:bg-primary">
             New Game
@@ -79,7 +88,9 @@ export default function Game({ game }: GameProps) {
     e.preventDefault()
     const userAnswer = e.currentTarget.id as 'A' | 'B' | 'C' | 'D'
     setPickedAnswer(userAnswer)
-    await evaluateAnswer({ gameId: game, choice: userAnswer, stage: currentStage })
+    setTimeout(() => {
+      evaluateAnswer({ gameId: game, choice: userAnswer, stage: currentStage })
+    },800)
   }
 
   return (
@@ -98,13 +109,24 @@ export default function Game({ game }: GameProps) {
               key={key}
               disabled={isEvaluating}
               onClick={handlePickedAnswer}
-              className={`col-span-2 flex items-center justify-center rounded-full border-2 border-body p-3 px-6 text-xl hover:border-primary-light hover:bg-primary disabled:animate-pulse lg:col-span-1 ${
-                pickedAnswer === key
-                  ? 'border-highlight-purple bg-highlight-purple/50 text-highlight-purple'
-                  : 'bg-primary-dark'
-              }`}
+              className={`
+                col-span-2 
+                flex items-center justify-between 
+                rounded-full border-2 
+                cursor-pointer
+                p-3 px-6 text-xl 
+                lg:col-span-1
+                border-body bg-primary-dark
+                hover:border-primary-light hover:bg-primary
+                disabled:animate-pulse
+                focus:border-highlight-purple focus:bg-highlight-purple/50 focus:text-highlight-purple
+                group
+                ${pickedAnswer === key && !rightAnswer && 'border-highlight-purple bg-highlight-purple/50 text-highlight-purple'}
+                ${rightAnswer && pickedAnswer === key && rightAnswer === key && 'border-green-300 bg-green-300/80 text-green-300 animate-blink'}
+                ${rightAnswer && pickedAnswer === key && rightAnswer !== key && 'border-red-300 bg-red-300/80 text-red-300 animate-blink'} 
+              `}
             >
-              {value}
+             <span className=' group-hover:border-primary-light group-hover:text-primary-light px-2 border-r-2 mr-2'>{key}</span> <span>{value}</span>
             </button>
           ))}
         </div>

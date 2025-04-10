@@ -16,11 +16,11 @@ datasource db {
 
 model Question {
     id         Int      @id @default(autoincrement())
-
-    stage      Int
+    health     Int      @default(1000)
+    stage      Int          
     mode       GameMode @default(NORMAL)
 
-    question   String
+    question   String  @db.Text
     
     A   String
     B   String
@@ -33,8 +33,6 @@ model Question {
     updatedAt  DateTime @updatedAt
 
     games      Game[]
-
-    @@index([question])
 }
 
 // Necessary for Next auth
@@ -68,8 +66,8 @@ model Session {
 model Game {
     id          String @id @default(cuid())
     playerId    String
-
-    stage       Int
+    type        String?
+    stage       Int      @default(1)
     mode        GameMode @default(NORMAL)
 
     fifty_fifty Boolean @default(false)
@@ -92,7 +90,7 @@ model User {
 
     accounts      Account[]
     sessions      Session[]
-
+    
     games         Game[]
 }
 

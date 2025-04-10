@@ -23,13 +23,19 @@ export const questionRouter = createTRPCRouter({
         questions:true
       }
      })
-
-     if(existingGame?.endedAt !== null){
-      throw new Error("START A NEW GAME. — GAME ENDED.")
-     }
+     
+   
      
      if(!existingGame){
       throw new Error("START A NEW GAME. — NO GAME.")
+     }
+
+     if(existingGame.playerId !== ctx.session.user.id){
+      throw new Error("NOT ALLOWED!")
+     }
+
+     if(existingGame.endedAt !== null){
+      throw new Error("START A NEW GAME. — GAME ENDED.")
      }
 
      const gameQuestions = existingGame.questions
@@ -38,8 +44,9 @@ export const questionRouter = createTRPCRouter({
       q => q.stage === stage
      )
 
+     const { answer } = currentQuestion!
 
-     if(currentQuestion?.answer !== choice){
+     if(answer !== choice){
         await ctx.db.game.update({
           where:{
             id: gameId
@@ -49,7 +56,10 @@ export const questionRouter = createTRPCRouter({
           }
         })
 
-      return false
+      return {
+        isRight: answer === choice,
+        answer
+      }
      }
 
      if(stage === 15){
@@ -58,11 +68,15 @@ export const questionRouter = createTRPCRouter({
           id:gameId
         },
         data:{
+          stage: 16,
           endedAt: new Date()
         }
        })
 
-       throw new Error("CONGRATULATIONS! YOU ARE THE MIONAIRE!!")
+      return {
+        isRight: answer === choice,
+        answer
+      }
      }
 
      await ctx.db.game.update({
@@ -77,7 +91,10 @@ export const questionRouter = createTRPCRouter({
      })
 
      
-     return true
+    return {
+      isRight: answer === choice,
+      answer
+    }
 
     }),
 });

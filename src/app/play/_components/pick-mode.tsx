@@ -3,12 +3,17 @@
 import { api } from "@/trpc/react"
 import { useRouter } from "next/navigation"
 import LoadingSpinner from "@/app/_components/loading-spinner"
+import { useState } from "react"
+
 export default function PickMode(){
     const router = useRouter()
-
-    const {mutateAsync:createGame, isPending} = api.game.create.useMutation({
+    const [errorMsg, setErrorMsg] = useState<string>()
+    const {mutateAsync:createGame, isPending, isSuccess} = api.game.makeRandom.useMutation({
         onSuccess: (data) => {
             router.push(`?game=${data}`)
+        },
+        onError:(error) => {
+            setErrorMsg(error.message)
         }
     })
 
@@ -20,7 +25,15 @@ export default function PickMode(){
         await createGame({mode: eventMode})
     }
 
-    if(isPending){
+    if(errorMsg){
+        return <div className="w-full flex flex-col items-center justify-center gap-4 ">
+            
+            <h5>Error:</h5>
+            <h6>{errorMsg}</h6>
+            <p>reload page</p>
+            </div>
+    }
+    if(isPending || isSuccess){
         return <div className="w-full flex flex-col items-center justify-center gap-4 ">
             <LoadingSpinner />
             <h5>Creating game...</h5>
