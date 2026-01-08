@@ -56,6 +56,96 @@ export const gameRouter = createTRPCRouter({
 
     return { name, score, rank };
   }),
+  getPlayerStats: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.session.user) return null;
+
+    const player = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      include: { games: true },
+    });
+
+    if (!player) return null;
+
+    let overallScore = 0;
+    let dailyScoreAllTime = 0;
+    let dailyScoreToday = 0;
+    let gamesPlayed = 0;
+    let bestStage = 0;
+    const isMionaire = player.games.some(
+      (g) => g.stage === 16 && g.endedAt !== null,
+    );
+
+    for (const game of player.games) {
+      if (game.endedAt === null) continue;
+
+      gamesPlayed++;
+
+      const multiplier = (() => {
+        switch (game.mode) {
+          case "HARD":
+            return 1.5;
+          case "EASY":
+            return 0.5;
+          default:
+            return 1;
+        }
+      })();
+
+      const gameScore = Math.floor(game.stage * 100 * multiplier);
+      overallScore += gameScore;
+
+      if (game.type === "daily") {
+        dailyScoreAllTime += gameScore;
+        if (game.endedAt >= startOfDay && game.endedAt <= endOfDay) {
+          dailyScoreToday += gameScore;
+        }
+      }
+
+      if (game.stage > bestStage) {
+        bestStage = game.stage;
+      }
+    }
+
+    const allUsers = await ctx.db.user.findMany({
+      include: { games: true },
+    });
+
+    const userScores = [];
+    for (const user of allUsers) {
+      let userScore = 0;
+      user.games.forEach((g) => {
+        if (g.endedAt !== null) {
+          const m = (() => {
+            switch (g.mode) {
+              case "HARD":
+                return 1.5;
+              case "EASY":
+                return 0.5;
+              default:
+                return 1;
+            }
+          })();
+          userScore += Math.floor(g.stage * 100 * m);
+        }
+      });
+      userScores.push({ id: user.id, score: userScore });
+    }
+
+    const sortedScores = userScores.sort((a, b) => b.score - a.score);
+    const overallRank = sortedScores.findIndex((s) => s.id === player.id) + 1;
+
+    return {
+      name: player.name ?? "Unknown",
+      image: player.image,
+      overallScore,
+      overallRank,
+      dailyScoreAllTime,
+      dailyScoreToday,
+      gamesPlayed,
+      bestStage,
+      isMionaire,
+    };
+  }),
   getMionaires: publicProcedure.query(async ({ ctx }) => {
     const mionaires = await ctx.db.game.findMany({
       where: {
@@ -110,7 +200,109 @@ export const gameRouter = createTRPCRouter({
       userScores.push({ id: user.id, name: user.name, score: userScore });
     }
 
-    return userScores;
+    return userScores.sort((a, b) => b.score - a.score);
+  }),
+  getDailyScores: publicProcedure.query(async ({ ctx }) => {
+    const games = await ctx.db.game.findMany({
+      where: {
+        type: "daily",
+        endedAt: {
+          not: null,
+        },
+      },
+      include: {
+        player: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const playerScores = new Map<
+      string,
+      { id: string; name: string; score: number }
+    >();
+
+    for (const game of games) {
+      const multiplier = (() => {
+        switch (game.mode) {
+          case "HARD":
+            return 1.5;
+          case "EASY":
+            return 0.5;
+          default:
+            return 1;
+        }
+      })();
+      const gameScore = Math.floor(game.stage * 100 * multiplier);
+
+      const existing = playerScores.get(game.player.id);
+      if (existing) {
+        existing.score += gameScore;
+      } else {
+        playerScores.set(game.player.id, {
+          id: game.player.id,
+          name: game.player.name ?? "Unknown",
+          score: gameScore,
+        });
+      }
+    }
+
+    return Array.from(playerScores.values()).sort((a, b) => b.score - a.score);
+  }),
+  getDailyScoresToday: publicProcedure.query(async ({ ctx }) => {
+    const games = await ctx.db.game.findMany({
+      where: {
+        type: "daily",
+        endedAt: {
+          not: null,
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      include: {
+        player: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const playerScores = new Map<
+      string,
+      { id: string; name: string; score: number }
+    >();
+
+    for (const game of games) {
+      const multiplier = (() => {
+        switch (game.mode) {
+          case "HARD":
+            return 1.5;
+          case "EASY":
+            return 0.5;
+          default:
+            return 1;
+        }
+      })();
+      const gameScore = Math.floor(game.stage * 100 * multiplier);
+
+      const existing = playerScores.get(game.player.id);
+      if (existing) {
+        existing.score += gameScore;
+      } else {
+        playerScores.set(game.player.id, {
+          id: game.player.id,
+          name: game.player.name ?? "Unknown",
+          score: gameScore,
+        });
+      }
+    }
+
+    return Array.from(playerScores.values()).sort((a, b) => b.score - a.score);
   }),
   makeDaily: protectedProcedure
     .input(
