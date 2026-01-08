@@ -3,6 +3,11 @@ import { env } from "@/env";
 import { GameMode } from "@prisma/client";
 
 const openai = new OpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  defaultHeaders: {
+    'HTTP-Referer': 'https://mionaire.miomideal.com', // Optional. Site URL for rankings on openrouter.ai.
+    'X-Title': 'Mionaire by Mio Mideal', // Optional. Site title for rankings on openrouter.ai.
+  },
   apiKey: env.OPENAI_API_KEY,
 });
 
@@ -84,7 +89,7 @@ export async function generateQuestionSet(
     const prompt = PROMPTS[mode];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Use cheaper model for trivia generation
+      model: "openai/gpt-oss-120b:free", // Use cheaper model for trivia generation
       messages: [
         {
           role: "system",
