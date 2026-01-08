@@ -17,17 +17,20 @@ datasource db {
 model Question {
     id         Int      @id @default(autoincrement())
     health     Int      @default(1000)
-    stage      Int          
+    stage      Int
     mode       GameMode @default(NORMAL)
 
     question   String  @db.Text
-    
+
     A   String
     B   String
     C   String
     D   String
 
     answer     String
+
+    isDaily    Boolean  @default(false)
+    dailySetId String?  // Unique ID for each daily generation batch
 
     createdAt  DateTime @default(now())
     updatedAt  DateTime @updatedAt
