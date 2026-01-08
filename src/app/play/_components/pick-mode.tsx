@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/app/_components/loading-spinner";
 import { useState } from "react";
 
-type GameType = "random" | "daily" | "challenger";
+type GameType = "random" | "daily";
 
 export default function PickMode() {
   const router = useRouter();
@@ -32,16 +32,6 @@ export default function PickMode() {
       },
     });
 
-  const { mutateAsync: createChallenger, isPending: challengerPending } =
-    api.game.makeChallenger.useMutation({
-      onSuccess: (data) => {
-        router.push(`?game=${data}`);
-      },
-      onError: (error) => {
-        setErrorMsg(error.message);
-      },
-    });
-
   async function handleClickedButton(
     event: React.MouseEvent<HTMLButtonElement>,
     type: GameType,
@@ -55,13 +45,10 @@ export default function PickMode() {
       case "daily":
         await createDaily({ mode: eventMode });
         break;
-      case "challenger":
-        await createChallenger({ mode: eventMode });
-        break;
     }
   }
 
-  const isPending = randomPending || dailyPending || challengerPending;
+  const isPending = randomPending || dailyPending;
 
   if (errorMsg) {
     return (
@@ -90,7 +77,6 @@ export default function PickMode() {
         {[
           { type: "random" as GameType, label: "RANDOM" },
           { type: "daily" as GameType, label: "DAILY" },
-          { type: "challenger" as GameType, label: "CHALLENGER" },
         ].map(({ type, label }) => (
           <button
             key={type}
@@ -126,9 +112,8 @@ export default function PickMode() {
       <div className="text-center text-sm text-gray-600">
         {gameType === "random" &&
           "Play with randomly selected questions from our database."}
-        {gameType === "daily" && "Play with questions created today."}
-        {gameType === "challenger" &&
-          "Compete with the latest AI-generated daily challenge questions!"}
+        {gameType === "daily" &&
+          "Play today&apos;s curated daily challenge questions!"}
       </div>
     </div>
   );

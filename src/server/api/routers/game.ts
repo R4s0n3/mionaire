@@ -313,54 +313,6 @@ export const gameRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { mode } = input;
 
-      const questionsToday = await ctx.db.question.findMany({
-        where: {
-          mode,
-          createdAt: {
-            gte: startOfDay,
-            lte: endOfDay,
-          },
-        },
-        orderBy: {
-          stage: "asc",
-        },
-      });
-
-      if (!questionsToday) {
-        throw new Error("no questions found. try again later.");
-      }
-
-      const pickedQuestions = getQuestionsByStage(
-        questionsToday.map((q) => ({ id: q.id, stage: q.stage })),
-      );
-
-      const createdGame = await ctx.db.game.create({
-        data: {
-          mode,
-          type: "daily",
-          questions: {
-            connect: pickedQuestions,
-          },
-          player: {
-            connect: {
-              id: ctx.session.user.id,
-            },
-          },
-        },
-      });
-
-      return createdGame.id;
-    }),
-  makeChallenger: protectedProcedure
-    .input(
-      z.object({
-        mode: z.enum(["EASY", "NORMAL", "HARD"]),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { mode } = input;
-
-      // Get the latest daily set for this mode
       const latestDailySet = await ctx.db.question.findFirst({
         where: {
           mode,
@@ -400,7 +352,7 @@ export const gameRouter = createTRPCRouter({
       const createdGame = await ctx.db.game.create({
         data: {
           mode,
-          type: "challenger",
+          type: "daily",
           questions: {
             connect: pickedQuestions,
           },
