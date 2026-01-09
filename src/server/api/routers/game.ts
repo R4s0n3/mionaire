@@ -12,6 +12,30 @@ const today = new Date();
 const startOfDay = new Date(today.setHours(0, 0, 0, 0));
 const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
+const DAILY_CUTOFF_HOUR = 1;
+const TIMEZONE = "Europe/Paris";
+
+function getCurrentDailySetId(): string {
+  const now = new Date();
+  const cutoff = new Date(now);
+  cutoff.setHours(DAILY_CUTOFF_HOUR, 0, 0, 0);
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  if (now < cutoff) {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yYear = yesterday.getFullYear();
+    const yMonth = String(yesterday.getMonth() + 1).padStart(2, "0");
+    const yDay = String(yesterday.getDate()).padStart(2, "0");
+    return `daily-${yYear}-${yMonth}-${yDay}`;
+  }
+
+  return `daily-${year}-${month}-${day}`;
+}
+
 export const gameRouter = createTRPCRouter({
   getPlayerRank: protectedProcedure.query(async ({ ctx }) => {
     if (!ctx.session.user) return {};
@@ -75,34 +99,55 @@ export const gameRouter = createTRPCRouter({
       (g) => g.stage === 16 && g.endedAt !== null,
     );
 
+    const getMultiplier = (mode: string) => {
+      switch (mode) {
+        case "HARD":
+          return 1.5;
+        case "EASY":
+          return 0.5;
+        default:
+          return 1;
+      }
+    };
+
+    const todayScores = new Map<string, number>();
+    const allTimeScoresByDate = new Map<string, number>();
+
     for (const game of player.games) {
       if (game.endedAt === null) continue;
 
       gamesPlayed++;
 
-      const multiplier = (() => {
-        switch (game.mode) {
-          case "HARD":
-            return 1.5;
-          case "EASY":
-            return 0.5;
-          default:
-            return 1;
-        }
-      })();
-
+      const multiplier = getMultiplier(game.mode);
       const gameScore = Math.floor(game.stage * 100 * multiplier);
       overallScore += gameScore;
 
       if (game.type === "daily") {
-        dailyScoreAllTime += gameScore;
-        if (game.endedAt >= startOfDay && game.endedAt <= endOfDay) {
-          dailyScoreToday += gameScore;
+        if (game.dailySetId) {
+          const todayExisting = todayScores.get(player.id);
+          if (!todayExisting || gameScore > todayExisting) {
+            todayScores.set(player.id, gameScore);
+          }
+
+          const playerDateKey = `${player.id}:${game.dailySetId}`;
+          const allExisting = allTimeScoresByDate.get(playerDateKey);
+          if (!allExisting || gameScore > allExisting) {
+            allTimeScoresByDate.set(playerDateKey, gameScore);
+          }
         }
       }
 
-      if (game.stage > bestStage) {
-        bestStage = game.stage;
+      const clearedStage = game.stage === 16 ? 15 : game.stage - 1;
+      if (clearedStage > bestStage) {
+        bestStage = clearedStage;
+      }
+    }
+
+    dailyScoreToday = todayScores.get(player.id) ?? 0;
+    for (const [key, score] of allTimeScoresByDate) {
+      const playerId = key.split(":")[0];
+      if (playerId === player.id) {
+        dailyScoreAllTime += score;
       }
     }
 
@@ -209,6 +254,9 @@ export const gameRouter = createTRPCRouter({
         endedAt: {
           not: null,
         },
+        dailySetId: {
+          not: null,
+        },
       },
       include: {
         player: {
@@ -220,32 +268,48 @@ export const gameRouter = createTRPCRouter({
       },
     });
 
+    const getMultiplier = (mode: string) => {
+      switch (mode) {
+        case "HARD":
+          return 1.5;
+        case "EASY":
+          return 0.5;
+        default:
+          return 1;
+      }
+    };
+
+    const scoresByDailySetAndPlayer = new Map<string, number>();
+
+    for (const game of games) {
+      if (!game.endedAt || !game.dailySetId) continue;
+      const key = `${game.dailySetId}:${game.player.id}`;
+      const gameScore = Math.floor(game.stage * 100 * getMultiplier(game.mode));
+
+      const existing = scoresByDailySetAndPlayer.get(key);
+      if (!existing || gameScore > existing) {
+        scoresByDailySetAndPlayer.set(key, gameScore);
+      }
+    }
+
     const playerScores = new Map<
       string,
       { id: string; name: string; score: number }
     >();
 
-    for (const game of games) {
-      const multiplier = (() => {
-        switch (game.mode) {
-          case "HARD":
-            return 1.5;
-          case "EASY":
-            return 0.5;
-          default:
-            return 1;
-        }
-      })();
-      const gameScore = Math.floor(game.stage * 100 * multiplier);
+    for (const [key, score] of scoresByDailySetAndPlayer) {
+      const playerId = key.split(":")[1];
+      const player = games.find((g) => g.player.id === playerId)?.player;
+      if (!player) continue;
 
-      const existing = playerScores.get(game.player.id);
+      const existing = playerScores.get(player.id);
       if (existing) {
-        existing.score += gameScore;
+        existing.score += score;
       } else {
-        playerScores.set(game.player.id, {
-          id: game.player.id,
-          name: game.player.name ?? "Unknown",
-          score: gameScore,
+        playerScores.set(player.id, {
+          id: player.id,
+          name: player.name ?? "Unknown",
+          score,
         });
       }
     }
@@ -253,14 +317,14 @@ export const gameRouter = createTRPCRouter({
     return Array.from(playerScores.values()).sort((a, b) => b.score - a.score);
   }),
   getDailyScoresToday: publicProcedure.query(async ({ ctx }) => {
+    const currentDailySetId = getCurrentDailySetId();
     const games = await ctx.db.game.findMany({
       where: {
         type: "daily",
         endedAt: {
           not: null,
-          gte: startOfDay,
-          lte: endOfDay,
         },
+        dailySetId: currentDailySetId,
       },
       include: {
         player: {
@@ -272,28 +336,27 @@ export const gameRouter = createTRPCRouter({
       },
     });
 
+    const getMultiplier = (mode: string) => {
+      switch (mode) {
+        case "HARD":
+          return 1.5;
+        case "EASY":
+          return 0.5;
+        default:
+          return 1;
+      }
+    };
+
     const playerScores = new Map<
       string,
       { id: string; name: string; score: number }
     >();
 
     for (const game of games) {
-      const multiplier = (() => {
-        switch (game.mode) {
-          case "HARD":
-            return 1.5;
-          case "EASY":
-            return 0.5;
-          default:
-            return 1;
-        }
-      })();
-      const gameScore = Math.floor(game.stage * 100 * multiplier);
+      const gameScore = Math.floor(game.stage * 100 * getMultiplier(game.mode));
 
       const existing = playerScores.get(game.player.id);
-      if (existing) {
-        existing.score += gameScore;
-      } else {
+      if (!existing || gameScore > existing.score) {
         playerScores.set(game.player.id, {
           id: game.player.id,
           name: game.player.name ?? "Unknown",
@@ -312,14 +375,43 @@ export const gameRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { mode } = input;
+      const currentDailySetId = getCurrentDailySetId();
+
+      const existingGame = await ctx.db.game.findFirst({
+        where: {
+          playerId: ctx.session.user.id,
+          type: "daily",
+          mode,
+          dailySetId: currentDailySetId,
+        },
+        include: {
+          questions: {
+            select: {
+              stage: true,
+              question: true,
+              A: true,
+              B: true,
+              C: true,
+              D: true,
+            },
+          },
+        },
+      });
+
+      if (existingGame) {
+        if (existingGame.endedAt === null) {
+          return existingGame.id;
+        }
+        throw new Error(
+          "You have already completed today's daily challenge for this mode!",
+        );
+      }
 
       const latestDailySet = await ctx.db.question.findFirst({
         where: {
           mode,
           isDaily: true,
-        },
-        orderBy: {
-          createdAt: "desc",
+          dailySetId: currentDailySetId,
         },
         select: {
           dailySetId: true,
@@ -353,6 +445,7 @@ export const gameRouter = createTRPCRouter({
         data: {
           mode,
           type: "daily",
+          dailySetId: currentDailySetId,
           questions: {
             connect: pickedQuestions,
           },
@@ -366,6 +459,25 @@ export const gameRouter = createTRPCRouter({
 
       return createdGame.id;
     }),
+  getIncompleteDailyGame: protectedProcedure.query(async ({ ctx }) => {
+    const currentDailySetId = getCurrentDailySetId();
+
+    const game = await ctx.db.game.findFirst({
+      where: {
+        playerId: ctx.session.user.id,
+        type: "daily",
+        endedAt: null,
+        dailySetId: currentDailySetId,
+      },
+      select: {
+        id: true,
+        mode: true,
+        stage: true,
+      },
+    });
+
+    return game;
+  }),
   getGame: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {
@@ -376,6 +488,7 @@ export const gameRouter = createTRPCRouter({
         include: {
           questions: {
             select: {
+              id: true,
               stage: true,
               question: true,
               A: true,

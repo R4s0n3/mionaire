@@ -36,6 +36,20 @@ model Question {
     updatedAt  DateTime @updatedAt
 
     games      Game[]
+    votes      Vote[]
+}
+
+model Vote {
+  id         String   @id @default(cuid())
+  questionId Int
+  gameId     String
+  choice     String
+  createdAt  DateTime @default(now())
+
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, gameId])
 }
 
 // Necessary for Next auth
@@ -73,14 +87,17 @@ model Game {
     stage       Int      @default(1)
     mode        GameMode @default(NORMAL)
 
-    fifty_fifty Boolean @default(false)
+    fifty_fifty  Boolean      @default(false)
+    audience_poll Boolean     @default(false)
+    dailySetId   String?
 
-    startedAt   DateTime @default(now())
+    startedAt   DateTime     @default(now())
     endedAt     DateTime?
 
     player      User @relation(fields: [playerId], references: [id])
 
     questions   Question[]
+    votes       Vote[]
 }
 
 model User {

@@ -12,6 +12,9 @@ export default function PickMode() {
   const [errorMsg, setErrorMsg] = useState<string>();
   const [gameType, setGameType] = useState<GameType>("random");
 
+  const { data: incompleteDailyGame } =
+    api.game.getIncompleteDailyGame.useQuery();
+
   const { mutateAsync: createRandom, isPending: randomPending } =
     api.game.makeRandom.useMutation({
       onSuccess: (data) => {
@@ -71,6 +74,21 @@ export default function PickMode() {
   return (
     <div className="flex w-full max-w-2xl flex-col items-center justify-center gap-8">
       <h2 className="text-4xl font-bold">PICK A MODE</h2>
+
+      {incompleteDailyGame && (
+        <div className="w-full rounded-xl border-2 border-amber-400 bg-amber-400/10 p-4 text-center">
+          <p className="mb-2 text-amber-400">
+            You have an incomplete daily game!
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push(`?game=${incompleteDailyGame.id}`)}
+            className="rounded-full border-2 border-amber-400 px-6 py-2 text-amber-400 hover:bg-amber-400 hover:text-black"
+          >
+            Continue Game (Stage {incompleteDailyGame.stage})
+          </button>
+        </div>
+      )}
 
       {/* Game Type Selection */}
       <div className="flex w-full justify-center gap-4 p-4">

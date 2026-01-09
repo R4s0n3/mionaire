@@ -8,6 +8,9 @@
 # testing
 /coverage
 
+# Local-only cron trigger
+src/app/api/cron/
+
 # database
 /prisma/db.sqlite
 /prisma/db.sqlite-journal
