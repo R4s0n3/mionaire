@@ -1,13 +1,12 @@
 import { generateAllDailySets } from "../ai/question-generator";
 import { db } from "@/server/db";
-import moment from "moment-timezone";
+import { getCurrentDailySetId } from "@/server/daily-set";
 
 export async function generateDailyQuestions() {
   console.log("Starting daily question generation...");
 
   try {
-    // Generate unique ID for this daily set
-    const dailySetId = `daily-${moment().tz("Europe/Paris").format("YYYY-MM-DD")}`;
+    const dailySetId = getCurrentDailySetId();
 
     // Check if questions already exist for today
     const existingQuestions = await db.question.findFirst({

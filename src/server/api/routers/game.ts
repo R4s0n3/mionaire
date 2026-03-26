@@ -5,36 +5,8 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
-
+import { getCurrentDailySetId } from "@/server/daily-set";
 import { getQuestionsByStage } from "@/util/functions";
-
-const today = new Date();
-const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-const endOfDay = new Date(today.setHours(23, 59, 59, 999));
-
-const DAILY_CUTOFF_HOUR = 1;
-const TIMEZONE = "Europe/Paris";
-
-function getCurrentDailySetId(): string {
-  const now = new Date();
-  const cutoff = new Date(now);
-  cutoff.setHours(DAILY_CUTOFF_HOUR, 0, 0, 0);
-
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-
-  if (now < cutoff) {
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yYear = yesterday.getFullYear();
-    const yMonth = String(yesterday.getMonth() + 1).padStart(2, "0");
-    const yDay = String(yesterday.getDate()).padStart(2, "0");
-    return `daily-${yYear}-${yMonth}-${yDay}`;
-  }
-
-  return `daily-${year}-${month}-${day}`;
-}
 
 export const gameRouter = createTRPCRouter({
   getPlayerRank: protectedProcedure.query(async ({ ctx }) => {

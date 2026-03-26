@@ -1,12 +1,12 @@
 import OpenAI from "openai";
 import { env } from "@/env";
 import { GameMode } from "@prisma/client";
-
+import { THEMES } from "./helper/themes";
 const openai = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
+  baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
-    'HTTP-Referer': 'https://mionaire.miomideal.com', // Optional. Site URL for rankings on openrouter.ai.
-    'X-Title': 'Mionaire by Mio Mideal', // Optional. Site title for rankings on openrouter.ai.
+    "HTTP-Referer": "https://mionaire.miomideal.com", // Optional. Site URL for rankings on openrouter.ai.
+    "X-Title": "Mionaire by Mio Mideal", // Optional. Site title for rankings on openrouter.ai.
   },
   apiKey: env.OPENAI_API_KEY,
 });
@@ -26,75 +26,94 @@ export interface QuestionSet {
   questions: GeneratedQuestion[];
 }
 
-const PROMPTS = {
-  [GameMode.EASY]: `Generate 15 trivia questions for an EASY difficulty quiz game. Questions should be basic general knowledge, suitable for beginners. Cover topics like history, geography, science basics, pop culture, etc. Each question must have 4 options (A, B, C, D) and one correct answer.
-
-Format as JSON array of objects:
-[
-  {
-    "stage": 1,
-    "question": "Question text?",
-    "A": "Option A",
-    "B": "Option B",
-    "C": "Option C",
-    "D": "Option D",
-    "answer": "A"
+const DIFFICULTY_CONFIG = {
+  [GameMode.EASY]: {
+    description:
+      "basic knowledge suitable for beginners, covering common facts most people know",
+    progression:
+      "start with very basic trick or misleading questions (stages 1-5), then gradually introduce slightly more specific knowledge (stages 6-15)",
+    validation:
+      "Make sure the correct answer is clearly one of the options and most educated people would know it",
   },
-  ...
-]
-
-Ensure questions progress in difficulty slightly through stages 1-15. Make sure the correct answer is clearly one of the options.`,
-
-  [GameMode.NORMAL]: `Generate 15 trivia questions for a NORMAL difficulty quiz game. Questions should be standard general knowledge, requiring some knowledge but not expert level. Mix of history, science, literature, sports, geography, current events, etc.
-
-Format as JSON array of objects:
-[
-  {
-    "stage": 1,
-    "question": "Question text?",
-    "A": "Option A",
-    "B": "Option B",
-    "C": "Option C",
-    "D": "Option D",
-    "answer": "A"
+  [GameMode.NORMAL]: {
+    description:
+      "require some knowledge but not expert level; a typical trivia fan should get most correct",
+    progression:
+      "start with accessible knowledge (stages 1-7), then moderately challenging (stages 8-15). Each stage builds slightly on previous complexity",
+    validation:
+      "Ensure variety in questions and that correct answers are unambiguous. Avoid overly obscure facts—aim for 'interesting' not 'impossible'",
   },
-  ...
-]
-
-Questions should increase in complexity from stage 1 to 15. Ensure variety in topics and correct answers are unambiguous.`,
-
-  [GameMode.HARD]: `Generate 15 trivia questions for a HARD difficulty quiz game. Questions should be challenging, requiring deep knowledge or niche expertise. Include advanced science, history details, literature, obscure facts, complex current events, etc.
-
-Format as JSON array of objects:
-[
-  {
-    "stage": 1,
-    "question": "Question text?",
-    "A": "Option A",
-    "B": "Option B",
-    "C": "Option C",
-    "D": "Option D",
-    "answer": "A"
+  [GameMode.HARD]: {
+    description:
+      "challenging and requiring deep knowledge, but still answerable by someone with strong general knowledge or interest in the topic",
+    progression:
+      "stages 1-8 are difficult but fair (expert-level facts that are documented and learnable), stages 9-15 are very difficult but still have logical reasoning paths or are based on well-known historical/cultural facts",
+    validation:
+      "Ensure correct answers are verifiable from reliable sources and make logical sense. Distractors should be plausible but clearly wrong upon reflection. Avoid trivia requiring obscure or contradictory sources",
   },
-  ...
-]
+};
 
-Make questions progressively more difficult through stages 1-15. Include some questions that might stump experts. Ensure correct answers are verifiable and options are plausible distractors.`,
+const QUESTION_STYLES = {
+  [GameMode.EASY]: [
+    "straightforward and clear",
+    "conversational and friendly",
+    "with a light twist or surprise",
+  ],
+  [GameMode.NORMAL]: [
+    "engaging with interesting context",
+    "thought-provoking but fair",
+    "with a clever angle or connection",
+  ],
+  [GameMode.HARD]: [
+    "intellectually challenging",
+    "with sophisticated framing",
+    "connecting concepts in unexpected ways",
+  ],
+};
+
+const createPrompt = (mode: GameMode, themes: string[], seed: string) => {
+  const config = DIFFICULTY_CONFIG[mode];
+  const styles = QUESTION_STYLES[mode];
+
+  return `Generate 15 trivia questions for a "${mode}" difficulty quiz game.
+
+Themes (1 question each): ${themes.join(", ")}
+
+Requirements:
+- Questions should ${config.description}
+- ${config.progression}
+- Each question has 4 options (A, B, C, D) with exactly one correct answer
+- ${config.validation}
+- Avoid direct questions ("What/Who/When/Which/The/In...")
+- Vary phrasing across all 15 questions. none of them should sound similar
+- Cycle through these styles: ${styles.join(", ")}
+- Make questions engaging, easy to understand and memorable, not robotic
+- Keep the length of each question short
+
+Seed: ${seed}
+
+Respond with ONLY a JSON array, no markdown:
+[
+  {"stage": 1, "question": "...", "A": "...", "B": "...", "C": "...", "D": "...", "answer": "A"},
+  ...
+]`;
 };
 
 export async function generateQuestionSet(
   mode: GameMode,
+  themes: string[],
 ): Promise<QuestionSet> {
   try {
-    const prompt = PROMPTS[mode];
+    const seed = `${Date.now()}-${mode}-${Math.random().toString(36).substring(7)}`;
+    const prompt = createPrompt(mode, themes, seed);
 
     const response = await openai.chat.completions.create({
-      model: "openai/gpt-oss-120b:free", // Use cheaper model for trivia generation
+      model: "google/gemini-3-flash-preview",
       messages: [
         {
           role: "system",
           content:
-            "You are a trivia question generator. Always respond with valid JSON only.",
+            "You are a trivia question generator. Create engaging, varied questions that feel natural and conversational. Always respond with valid JSON only, no markdown.",
         },
         {
           role: "user",
@@ -102,7 +121,7 @@ export async function generateQuestionSet(
         },
       ],
       max_tokens: 4000,
-      temperature: 0.7,
+      temperature: 0.69,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -110,20 +129,19 @@ export async function generateQuestionSet(
       throw new Error("No content received from OpenAI");
     }
 
-    // Parse JSON
+    const cleaned = content.replace(/^```json?\n?|\n?```$/g, "").trim();
+
     let questions: GeneratedQuestion[];
     try {
-      questions = JSON.parse(content) as GeneratedQuestion[];
+      questions = JSON.parse(cleaned) as GeneratedQuestion[];
     } catch {
       throw new Error("Failed to parse generated questions as JSON");
     }
 
-    // Validate structure
     if (!Array.isArray(questions) || questions.length !== 15) {
       throw new Error("Invalid question set: must be array of 15 questions");
     }
 
-    // Validate each question
     for (const q of questions) {
       if (
         !q.stage ||
@@ -147,11 +165,12 @@ export async function generateQuestionSet(
     throw error;
   }
 }
-
 export async function generateAllDailySets(
+  themes: string[] = THEMES,
   maxRetries = 3,
 ): Promise<QuestionSet[]> {
   const sets: QuestionSet[] = [];
+  const usedThemes = new Set<string>();
 
   for (const mode of [GameMode.EASY, GameMode.NORMAL, GameMode.HARD]) {
     let attempts = 0;
@@ -159,11 +178,29 @@ export async function generateAllDailySets(
 
     while (attempts < maxRetries && !success) {
       try {
+        // Select 5 random themes that haven't been used yet
+        const availableThemes = themes.filter((t) => !usedThemes.has(t));
+        if (availableThemes.length < 5) {
+          throw new Error(
+            `Not enough unique themes to generate all sets. Need 5, only have ${availableThemes.length}.`,
+          );
+        }
+
+        // Shuffle and pick 5 themes
+        const shuffled = [...availableThemes].sort(() => Math.random() - 0.5);
+        const selectedThemes = shuffled.slice(0, 5);
+
         console.log(
-          `Generating ${mode} questions (attempt ${attempts + 1}/${maxRetries})`,
+          `Generating ${mode} questions with themes: ${selectedThemes.join(", ")} (attempt ${attempts + 1
+          }/${maxRetries})`,
         );
-        const set = await generateQuestionSet(mode);
+        const set = await generateQuestionSet(mode, selectedThemes);
         sets.push(set);
+
+        for (const t of selectedThemes) {
+          usedThemes.add(t);
+        }
+
         success = true;
         console.log(`Successfully generated ${mode} questions`);
       } catch (error) {
