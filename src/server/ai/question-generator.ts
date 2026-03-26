@@ -8,7 +8,7 @@ const openai = new OpenAI({
     "HTTP-Referer": "https://mionaire.miomideal.com", // Optional. Site URL for rankings on openrouter.ai.
     "X-Title": "Mionaire by Mio Mideal", // Optional. Site title for rankings on openrouter.ai.
   },
-  apiKey: env.OPENAI_API_KEY,
+  apiKey: env.OPENROUTER_API_KEY,
 });
 
 export interface GeneratedQuestion {
@@ -108,7 +108,7 @@ export async function generateQuestionSet(
     const prompt = createPrompt(mode, themes, seed);
 
     const response = await openai.chat.completions.create({
-      model: "google/gemini-3-flash-preview",
+      model: env.OPENROUTER_MODEL,
       messages: [
         {
           role: "system",
