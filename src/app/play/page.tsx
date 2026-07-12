@@ -1,32 +1,12 @@
-
-import { auth } from "@/server/auth";
-import { HydrateClient } from "@/trpc/server";
-
-import PickMode from "./_components/pick-mode";
-import Game from "./_components/game";
-import { redirect } from "next/navigation";
+import PlayClient from "./_components/play-client";
 
 export default async function GamePage({
-    searchParams,
-  }: {
-    searchParams: Promise<{ game: string }>
-  }) {
+  searchParams,
+}: {
+  searchParams: Promise<{ game?: string | string[] }>;
+}) {
+  const { game } = await searchParams;
+  const gameId = typeof game === "string" ? game : undefined;
 
-    const gameId = (await searchParams).game
-    const session = await auth();
-
-  if (!session?.user) redirect("/")
-
-
-  return (
-    <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary to-primary-dark text-body">
-       {gameId ?
-        <Game game={gameId} />
-        :
-        <PickMode />
-       }
-      </main>
-    </HydrateClient>
-  );
+  return <PlayClient gameId={gameId} />;
 }

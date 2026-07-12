@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+:root {
+  --font-quantico-sans: "Arial Narrow", "Avenir Next Condensed", sans-serif;
+}
+
 @theme {
   --font-sans: var(--font-quantico-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

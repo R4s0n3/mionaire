@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HomeIcon, SidebarClose, SidebarOpen } from "lucide-react";
 import { stages } from "@/util/stages";
 import Link from "next/link";
@@ -9,39 +9,42 @@ import { motion, AnimatePresence } from "framer-motion";
 interface JokerProps {
   fiftyFiftyUsed: boolean;
   audiencePollUsed: boolean;
-  triggerFiftyFifty:
-  | ((args: { gameId: string; questionId: number }) => void)
-  | undefined;
-  triggerAudiencePoll:
-  | ((args: { gameId: string; questionId: number }) => void)
-  | undefined;
+  fiftyFiftyPending: boolean;
+  audiencePollPending: boolean;
+  triggerFiftyFifty?: () => void | Promise<void>;
+  triggerAudiencePoll?: () => void | Promise<void>;
   audiencePollResults: { answer: string; percent: number }[] | null;
-  currentQuestionId: number | undefined;
-  gameId: string;
 }
 
 export default function SideBar({
   currentStage,
   fiftyFiftyUsed,
   audiencePollUsed,
+  fiftyFiftyPending,
+  audiencePollPending,
   triggerFiftyFifty,
   triggerAudiencePoll,
   audiencePollResults,
-  currentQuestionId,
-  gameId,
 }: { currentStage: number } & JokerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateViewport = () => setIsDesktop(mediaQuery.matches);
+
+    updateViewport();
+    mediaQuery.addEventListener("change", updateViewport);
+
+    return () => mediaQuery.removeEventListener("change", updateViewport);
+  }, []);
 
   const handleFiftyFifty = () => {
-    if (currentQuestionId && triggerFiftyFifty) {
-      triggerFiftyFifty({ gameId, questionId: currentQuestionId });
-    }
+    void triggerFiftyFifty?.();
   };
 
   const handleAudiencePoll = () => {
-    if (currentQuestionId && triggerAudiencePoll) {
-      triggerAudiencePoll({ gameId, questionId: currentQuestionId });
-    }
+    void triggerAudiencePoll?.();
   };
 
   const sidebarVariants = {
@@ -115,15 +118,16 @@ export default function SideBar({
 
   return (
     <>
-      <div className="absolute bottom-20 right-2 lg:top-2 lg:right-16 z-50 flex gap-2">
+      <div className="absolute right-2 bottom-20 z-50 flex gap-2 lg:top-2 lg:right-16">
         <button
           type="button"
           onClick={handleFiftyFifty}
-          disabled={fiftyFiftyUsed}
-          className={`flex size-12 items-center justify-center rounded-full border-2 font-bold ${fiftyFiftyUsed
-            ? "border-gray-500 bg-gray-500/30 text-gray-500"
-            : "border-highlight-yellow bg-highlight-yellow/20 text-highlight-yellow hover:scale-110"
-            }`}
+          disabled={fiftyFiftyUsed || fiftyFiftyPending}
+          className={`flex size-12 items-center justify-center rounded-full border-2 font-bold ${
+            fiftyFiftyUsed || fiftyFiftyPending
+              ? "border-gray-500 bg-gray-500/30 text-gray-500"
+              : "border-highlight-yellow bg-highlight-yellow/20 text-highlight-yellow hover:scale-110"
+          }`}
           title="50:50 Joker"
         >
           50:50
@@ -131,11 +135,12 @@ export default function SideBar({
         <button
           type="button"
           onClick={handleAudiencePoll}
-          disabled={audiencePollUsed}
-          className={`flex size-12 items-center justify-center rounded-full border-2 font-bold ${audiencePollUsed
-            ? "border-gray-500 bg-gray-500/30 text-gray-500"
-            : "border-highlight-green bg-highlight-green/20 text-highlight-green hover:scale-110"
-            }`}
+          disabled={audiencePollUsed || audiencePollPending}
+          className={`flex size-12 items-center justify-center rounded-full border-2 font-bold ${
+            audiencePollUsed || audiencePollPending
+              ? "border-gray-500 bg-gray-500/30 text-gray-500"
+              : "border-highlight-green bg-highlight-green/20 text-highlight-green hover:scale-110"
+          }`}
           title="Audience Poll Joker"
         >
           %
@@ -172,10 +177,10 @@ export default function SideBar({
         initial={false}
         animate={
           isOpen
-            ? window.innerWidth >= 1024
+            ? isDesktop
               ? "openDesktop"
               : "open"
-            : window.innerWidth >= 1024
+            : isDesktop
               ? "closedDesktop"
               : "closed"
         }

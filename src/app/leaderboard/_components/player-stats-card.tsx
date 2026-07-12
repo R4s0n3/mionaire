@@ -1,19 +1,26 @@
 "use client";
 
-import { api } from "@/trpc/react";
+import { useCallback } from "react";
 import {
+  Calendar,
   Crown,
   Star,
-  Trophy,
   Target,
-  Calendar,
   TrendingUp,
+  Trophy,
 } from "lucide-react";
 
-export default function PlayerStatsCard() {
-  const [stats] = api.game.getPlayerStats.useSuspenseQuery();
+import { apiClient } from "@/lib/api-client";
+import { useApiQuery } from "@/hooks/use-api-query";
 
-  if (!stats) return null;
+export default function PlayerStatsCard() {
+  const query = useCallback(async () => {
+    const { stats } = await apiClient.getPlayerStats();
+    return stats;
+  }, []);
+  const { data: stats, isLoading } = useApiQuery(query);
+
+  if (isLoading || !stats) return null;
 
   return (
     <div className="from-primary via-primary to-primary-dark border-highlight-purple relative w-full max-w-5xl overflow-hidden rounded-2xl border-2 bg-gradient-to-br shadow-2xl">
@@ -23,6 +30,9 @@ export default function PlayerStatsCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {stats.image ? (
+              // OAuth avatar hosts are provider-controlled and cannot be safely
+              // enumerated in Next.js image configuration.
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={stats.image}
                 alt={stats.name}

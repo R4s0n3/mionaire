@@ -8,14 +8,6 @@
 # testing
 /coverage
 
-# Local-only cron trigger
-src/app/api/cron/
-
-# database
-/prisma/db.sqlite
-/prisma/db.sqlite-journal
-db.sqlite
-
 # next.js
 /.next/
 /out/
@@ -35,9 +27,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # local env files
-# do not commit any .env files to git, except for the .env.example file. https://create.t3.gg/en/usage/env-variables#using-environment-variables
-.env
-.env*.local
+# do not commit any .env files, except the documented template
+.env*
+!.env.example
 
 # vercel
 .vercel
