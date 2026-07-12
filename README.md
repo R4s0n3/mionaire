@@ -1,6 +1,6 @@
 # Mionaire web client
 
-The Mionaire web app is a standalone Next.js client. It contains no database,
+The Mionaire web app is a Next.js client. It contains no database,
 Prisma, scheduler, AI-generation, or server-side game API code. It talks to a
 separately deployed `mionaire-api` Express service over JSON REST and Auth.js
 endpoints. The two projects can live in independent repositories.
@@ -8,7 +8,7 @@ endpoints. The two projects can live in independent repositories.
 ## Prerequisites
 
 - Bun 1.3+
-- An active Node.js LTS release for the Next.js production server
+- Node.js 22.x for the Next.js production server
 - A running `mionaire-api` instance
 
 This repository uses Bun as its sole package manager. `bun.lock` is the
@@ -74,7 +74,7 @@ separately for each environment if its API URL differs. Do not put API secrets,
 database URLs, OpenRouter keys, Auth.js secrets, or Discord client secrets in
 this project.
 
-## Production build and hosting
+## Production build and Coolify hosting
 
 The client can be hosted independently of the API on any platform that runs
 Next.js. Build it with the intended public API URL set:
@@ -83,17 +83,31 @@ Next.js. Build it with the intended public API URL set:
 NEXT_PUBLIC_API_BASE_URL="https://mionaire.example.com" bun run build
 ```
 
-`next.config.js` uses Next's standalone output. After a build, run the emitted
-server with:
+Run the standard Next.js production server with:
 
 ```sh
-node .next/standalone/server.js
+bun run start
 ```
 
-Set `PORT` and `HOSTNAME` as needed by the hosting platform. The API is hosted
-and scaled separately; it owns database migrations, question generation, and
-scheduled work. Register the backend's public callback URL in the Discord
-application, for example
+For a Coolify deployment, use these application settings:
+
+- Build Pack: `Nixpacks`
+- Base Directory: `/`
+- Is it a static site?: disabled
+- Port Exposes: `3000`
+- Install, build, and start command overrides: leave empty so Nixpacks detects
+  Bun and uses the scripts in `package.json`
+
+Add `NEXT_PUBLIC_API_BASE_URL` in Coolify and keep **Build Variable** enabled;
+the build intentionally fails when it is missing or is not a valid public HTTP(S)
+origin. If AdSense is enabled, make `NEXT_PUBLIC_ADSENSE_CLIENT_ID` available at
+build time as well. Runtime availability is optional for both values because
+Next.js compiles them into the browser bundle.
+
+Coolify supplies `PORT` to the container, and `next start` listens on it. The API
+is hosted and scaled separately; it owns database migrations, question
+generation, and scheduled work. Register the backend's public callback URL in
+the Discord application, for example
 `https://mionaire.example.com/auth/callback/discord` for same-origin routing.
 
 ## Checks
