@@ -3,20 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Brain,
-  CalendarDays,
-  Check,
-  Flame,
-  Gauge,
-  RotateCcw,
-  Shuffle,
-  Sparkles,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 
-import BrandMark from "@/app/_components/brand-mark";
 import LoadingSpinner from "@/app/_components/loading-spinner";
 import { useAuth } from "@/app/_components/auth-provider";
 import {
@@ -28,30 +16,10 @@ import {
 
 type GameType = "random" | "daily";
 
-const difficultyOptions: {
-  mode: GameMode;
-  title: string;
-  description: string;
-  icon: typeof Gauge;
-}[] = [
-  {
-    mode: "EASY",
-    title: "Warm-up",
-    description: "A friendly climb with familiar topics.",
-    icon: Gauge,
-  },
-  {
-    mode: "NORMAL",
-    title: "Classic",
-    description: "The full studio challenge, as intended.",
-    icon: Brain,
-  },
-  {
-    mode: "HARD",
-    title: "Expert",
-    description: "Obscure facts and very little mercy.",
-    icon: Flame,
-  },
+const difficultyOptions: { mode: GameMode; note: string }[] = [
+  { mode: "EASY", note: "we'd like you to come back." },
+  { mode: "NORMAL", note: "the usual amount of unfair." },
+  { mode: "HARD", note: "the researcher was unsupervised." },
 ];
 
 export default function PickMode() {
@@ -118,54 +86,40 @@ export default function PickMode() {
 
   const dailyStartBlocked =
     gameType === "daily" && (isLoadingDailyGame || !!incompleteDailyGame);
+  const selectedDifficulty = difficultyOptions.find(
+    ({ mode }) => mode === gameMode,
+  );
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-7xl flex-col px-4 py-5 sm:px-7 lg:px-10">
+    <div className="mx-auto flex min-h-svh w-full max-w-4xl flex-col px-4 py-5 sm:px-7">
       <header className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 text-white"
-          aria-label="Mionaire home"
-        >
-          <BrandMark className="text-secondary text-3xl" />
-          <span className="hidden text-sm font-black tracking-[0.2em] sm:inline">
-            MIONAIRE
-          </span>
-        </Link>
-        <Link href="/" className="show-button-secondary !min-h-10 !px-4">
-          <ArrowLeft className="size-4" aria-hidden="true" /> Home
+        <span className="broadcast-note">MIO-TV · menu</span>
+        <Link href="/" className="show-button-secondary !min-h-10 !px-3">
+          <ArrowLeft className="size-4" aria-hidden="true" /> back
         </Link>
       </header>
 
-      <div className="mx-auto my-auto w-full max-w-5xl py-10 lg:py-14">
-        <div className="text-center">
-          <p className="eyebrow flex items-center justify-center gap-2">
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            Choose tonight&apos;s challenge
-          </p>
-          <h1 className="mt-3 text-4xl leading-none font-black tracking-[-0.035em] text-white uppercase sm:text-6xl">
-            Take the hot seat.
+      <div className="my-auto py-10">
+        <div>
+          <p className="eyebrow">tonight&apos;s program</p>
+          <h1 className="mt-2 text-5xl leading-none font-black text-white uppercase sm:text-7xl">
+            New game?
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/55 sm:text-base">
-            Pick a show format and set your difficulty. Every run still has
-            fifteen questions between you and the million.
+          <p className="mt-3 font-mono text-sm text-white/58">
+            questions may be difficult.
           </p>
         </div>
 
         {incompleteDailyGame && !isLoadingDailyGame && (
-          <section className="glass-panel border-highlight-gold/30 mx-auto mt-8 flex max-w-3xl flex-col items-center gap-4 rounded-2xl p-5 text-center sm:flex-row sm:text-left">
-            <span className="bg-highlight-gold/12 text-highlight-gold grid size-12 flex-none place-items-center rounded-full">
-              <RotateCcw className="size-5" aria-hidden="true" />
-            </span>
-            <div className="flex-1">
-              <p className="text-highlight-gold text-xs font-black tracking-[0.14em] uppercase">
-                Your daily run is still live
-              </p>
-              <p className="mt-1 text-sm text-white/58">
-                Continue from question {incompleteDailyGame.stage} on{" "}
-                {incompleteDailyGame.mode.toLowerCase()} difficulty.
-              </p>
-            </div>
+          <section className="border-highlight-gold bg-primary mt-7 flex flex-col gap-4 border-2 p-4 sm:flex-row sm:items-center">
+            <RotateCcw
+              className="text-highlight-gold size-5 flex-none"
+              aria-hidden="true"
+            />
+            <p className="flex-1 font-mono text-xs leading-5 text-white/72">
+              WE LEFT THE TAPE RUNNING — Q.{incompleteDailyGame.stage} ·{" "}
+              {incompleteDailyGame.mode}
+            </p>
             <button
               type="button"
               onClick={() =>
@@ -173,165 +127,109 @@ export default function PickMode() {
                   `/play?game=${encodeURIComponent(incompleteDailyGame.id)}`,
                 )
               }
-              className="show-button w-full sm:w-auto"
+              className="show-button"
             >
-              Resume game <ArrowRight className="size-4" aria-hidden="true" />
+              continue <ArrowRight className="size-4" aria-hidden="true" />
             </button>
           </section>
         )}
 
-        <section className="glass-panel mt-8 rounded-[2rem] p-5 sm:p-8">
+        <section className="glass-panel mt-7 p-5 sm:p-7">
           <fieldset>
-            <legend className="eyebrow">1 · Select a format</legend>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {[
-                {
-                  type: "random" as const,
-                  icon: Shuffle,
-                  title: "Open challenge",
-                  badge: "Play anytime",
-                  description:
-                    "A fresh mix drawn from the full question vault.",
-                },
-                {
-                  type: "daily" as const,
-                  icon: CalendarDays,
-                  title: "Daily spotlight",
-                  badge: "One set today",
-                  description: "The same curated ladder faced by every player.",
-                },
-              ].map(({ type, icon: Icon, title, badge, description }) => {
+            <legend className="eyebrow">tape</legend>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {(["random", "daily"] as GameType[]).map((type) => {
                 const selected = gameType === type;
                 return (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setGameType(type)}
-                    className={`relative flex items-start gap-4 rounded-2xl border p-5 text-left transition ${
+                    className={`min-h-12 border-2 px-4 font-mono text-sm font-black uppercase ${
                       selected
-                        ? "border-secondary/60 bg-secondary/10 shadow-[0_0_28px_rgba(89,230,255,0.08)]"
-                        : "border-white/10 bg-black/10 hover:border-white/25 hover:bg-white/4"
+                        ? "border-secondary bg-secondary text-primary-dark"
+                        : "bg-primary-dark border-white/18 text-white/58 hover:border-white/45 hover:text-white"
                     }`}
                     aria-pressed={selected}
                   >
-                    <span
-                      className={`grid size-11 flex-none place-items-center rounded-xl ${
-                        selected
-                          ? "bg-secondary/15 text-secondary"
-                          : "bg-white/7 text-white/55"
-                      }`}
-                    >
-                      <Icon className="size-5" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="font-black text-white">{title}</span>
-                        <span className="rounded-full bg-white/6 px-2 py-0.5 text-[0.62rem] font-bold tracking-[0.08em] text-white/42 uppercase">
-                          {badge}
-                        </span>
-                      </span>
-                      <span className="mt-1.5 block text-sm leading-5 text-white/48">
-                        {description}
-                      </span>
-                    </span>
-                    {selected && (
-                      <Check
-                        className="text-secondary absolute top-4 right-4 size-4"
-                        aria-hidden="true"
-                      />
-                    )}
+                    {selected ? "> " : ""}
+                    {type}
                   </button>
                 );
               })}
             </div>
+            <p className="mt-2 font-mono text-xs text-white/45">
+              {gameType === "random"
+                ? "fresh questions from the box."
+                : "same questions for everyone today."}
+            </p>
           </fieldset>
 
-          <div className="my-7 h-px bg-white/8" />
+          <div className="my-6 border-t-2 border-dashed border-white/12" />
 
           <fieldset>
-            <legend className="eyebrow">2 · Set the difficulty</legend>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              {difficultyOptions.map(
-                ({ mode, title, description, icon: Icon }) => {
-                  const selected = gameMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setGameMode(mode)}
-                      className={`rounded-2xl border p-4 text-left transition ${
-                        selected
-                          ? "border-highlight-gold/65 bg-highlight-gold/9"
-                          : "border-white/10 bg-black/10 hover:border-white/25"
-                      }`}
-                      aria-pressed={selected}
-                    >
-                      <span className="flex items-center gap-3">
-                        <Icon
-                          className={`size-4 ${selected ? "text-highlight-gold" : "text-white/45"}`}
-                          aria-hidden="true"
-                        />
-                        <span
-                          className={`text-xs font-black tracking-[0.1em] uppercase ${selected ? "text-highlight-gold" : "text-white/72"}`}
-                        >
-                          {mode}
-                        </span>
-                      </span>
-                      <span className="mt-3 block font-black text-white">
-                        {title}
-                      </span>
-                      <span className="mt-1 block text-xs leading-5 text-white/42">
-                        {description}
-                      </span>
-                    </button>
-                  );
-                },
-              )}
+            <legend className="eyebrow">difficulty knob</legend>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {difficultyOptions.map(({ mode }) => {
+                const selected = gameMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setGameMode(mode)}
+                    className={`min-h-12 border-2 px-2 font-mono text-xs font-black uppercase sm:text-sm ${
+                      selected
+                        ? "border-highlight-gold bg-highlight-gold text-primary-dark"
+                        : "bg-primary-dark border-white/18 text-white/58 hover:border-white/45 hover:text-white"
+                    }`}
+                    aria-pressed={selected}
+                  >
+                    {mode}
+                  </button>
+                );
+              })}
             </div>
+            <p className="mt-3 min-h-5 font-mono text-xs text-white/58">
+              {selectedDifficulty?.note}
+            </p>
           </fieldset>
 
           {dailyLookupError && (
             <p
-              className="mt-5 rounded-xl border border-amber-300/25 bg-amber-300/8 p-3 text-sm text-amber-100"
+              className="border-highlight-gold bg-highlight-gold/8 mt-5 border-l-4 p-3 font-mono text-xs text-amber-100"
               role="status"
             >
-              We couldn&apos;t check for an unfinished daily game. You can still
-              start a new challenge.
+              daily tape check failed. starting may still work.
             </p>
           )}
 
           {errorMsg && (
             <p
-              className="mt-5 rounded-xl border border-red-300/30 bg-red-400/10 p-3 text-sm text-red-100"
+              className="mt-5 border-l-4 border-red-300 bg-red-400/10 p-3 text-sm text-red-100"
               role="alert"
             >
               {errorMsg}
             </p>
           )}
 
-          <div className="mt-7 flex flex-col items-center justify-between gap-4 border-t border-white/8 pt-6 sm:flex-row">
-            <p className="text-center text-xs leading-5 text-white/38 sm:text-left">
-              {gameType === "daily" ? "Daily spotlight" : "Open challenge"} ·{" "}
-              {gameMode.toLowerCase()} difficulty
-            </p>
+          <div className="mt-6 flex justify-end border-t-2 border-dashed border-white/12 pt-5">
             <button
               type="button"
               onClick={() => void startGame()}
               disabled={isPending || dailyStartBlocked}
-              className="show-button w-full sm:w-auto sm:min-w-56"
+              className="show-button w-full sm:w-auto sm:min-w-44"
             >
               {isPending ? (
                 <>
-                  <LoadingSpinner compact /> Preparing game…
+                  <LoadingSpinner compact /> cueing…
                 </>
               ) : isLoadingDailyGame && gameType === "daily" ? (
-                "Checking daily game…"
+                "checking tape…"
               ) : incompleteDailyGame && gameType === "daily" ? (
-                "Resume above"
+                "continue above"
               ) : (
                 <>
-                  Start the game{" "}
-                  <ArrowRight className="size-4" aria-hidden="true" />
+                  start <ArrowRight className="size-4" aria-hidden="true" />
                 </>
               )}
             </button>

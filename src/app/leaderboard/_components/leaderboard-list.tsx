@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { Medal, UserRound } from "lucide-react";
 
 import { apiClient } from "@/lib/api-client";
 import { useApiQuery } from "@/hooks/use-api-query";
@@ -24,63 +23,59 @@ export default function LeaderboardList({
     .slice(0, 10);
 
   return (
-    <section className="glass-panel flex min-h-80 flex-col overflow-hidden rounded-3xl">
-      <header className="flex items-center gap-4 border-b border-white/8 p-5">
-        <span className="bg-highlight-purple/12 text-highlight-purple grid size-11 flex-none place-items-center rounded-xl">
-          <Medal className="size-5" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="eyebrow !text-highlight-purple">Career ranking</p>
-          <h2 className="mt-0.5 text-xl font-black text-white">All-stars</h2>
-        </div>
+    <section className="glass-panel flex min-h-64 flex-col overflow-hidden">
+      <header className="border-b-2 border-dashed border-white/15 px-4 py-3">
+        <h2 className="text-highlight-purple font-mono text-sm font-black uppercase">
+          overall
+        </h2>
       </header>
       <div className="flex-1 p-3">
         {isLoading && (
-          <p className="p-6 text-center text-sm text-white/45" role="status">
-            Loading all-stars…
+          <p
+            className="p-6 text-center font-mono text-xs text-white/55"
+            role="status"
+          >
+            loading…
           </p>
         )}
         {error && (
-          <p className="p-6 text-center text-sm text-red-200" role="alert">
+          <p
+            className="p-6 text-center font-mono text-xs text-red-200"
+            role="alert"
+          >
             {error.message}
           </p>
         )}
         {!isLoading && !error && rankedScores?.length === 0 && (
-          <p className="p-6 text-center text-sm text-white/40">
-            No scores yet. A new legend can still be first.
+          <p className="p-6 text-center font-mono text-xs text-white/55">
+            no evidence.
           </p>
         )}
-        <ol className="flex flex-col gap-1">
+        <ol>
           {rankedScores?.map((user, index) => {
             const isCurrent = user.id === currentUserId;
             return (
               <li
-                className={`grid grid-cols-[2.2rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${
+                className={`grid grid-cols-[2.2rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-white/8 px-3 py-2.5 text-sm ${
                   isCurrent
-                    ? "bg-highlight-purple/12 ring-highlight-purple/35 text-white ring-1"
-                    : "text-white/62 odd:bg-white/3"
+                    ? "border-l-highlight-purple bg-highlight-purple/10 border-l-4 text-white"
+                    : "text-white/68"
                 }`}
                 key={user.id}
               >
                 <span
-                  className={`font-black ${index < 3 ? "text-highlight-gold" : "text-white/30"}`}
+                  className={`font-mono font-black ${index < 3 ? "text-highlight-gold" : "text-white/35"}`}
                 >
                   #{index + 1}
                 </span>
                 <span className="truncate font-bold">
                   {user.name}{" "}
                   {isCurrent && (
-                    <span className="text-highlight-purple">(You)</span>
+                    <span className="text-highlight-purple">(you)</span>
                   )}
                 </span>
-                <span className="flex items-center gap-2 font-black text-white tabular-nums">
+                <span className="font-mono font-black text-white tabular-nums">
                   {user.score}
-                  {isCurrent && (
-                    <UserRound
-                      className="text-highlight-purple size-3.5"
-                      aria-hidden="true"
-                    />
-                  )}
                 </span>
               </li>
             );

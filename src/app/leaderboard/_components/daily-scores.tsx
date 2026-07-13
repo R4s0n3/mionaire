@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { Crown, UserRound } from "lucide-react";
 
 import { apiClient } from "@/lib/api-client";
 import { useApiQuery } from "@/hooks/use-api-query";
@@ -18,65 +17,59 @@ export default function DailyScores({ currentUserId }: DailyScoresProps) {
   const { data: scores, error, isLoading } = useApiQuery(query);
 
   return (
-    <section className="glass-panel flex min-h-80 flex-col overflow-hidden rounded-3xl">
-      <header className="flex items-center gap-4 border-b border-white/8 p-5">
-        <span className="bg-highlight-gold/10 text-highlight-gold grid size-11 flex-none place-items-center rounded-xl">
-          <Crown className="size-5" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="eyebrow !text-highlight-gold">All-time daily</p>
-          <h2 className="mt-0.5 text-xl font-black text-white">
-            Daily legends
-          </h2>
-        </div>
+    <section className="glass-panel flex min-h-64 flex-col overflow-hidden">
+      <header className="border-b-2 border-dashed border-white/15 px-4 py-3">
+        <h2 className="text-highlight-gold font-mono text-sm font-black uppercase">
+          daily / all time
+        </h2>
       </header>
       <div className="flex-1 p-3">
         {isLoading && (
-          <p className="p-6 text-center text-sm text-white/45" role="status">
-            Loading daily legends…
+          <p
+            className="p-6 text-center font-mono text-xs text-white/55"
+            role="status"
+          >
+            loading…
           </p>
         )}
         {error && (
-          <p className="p-6 text-center text-sm text-red-200" role="alert">
+          <p
+            className="p-6 text-center font-mono text-xs text-red-200"
+            role="alert"
+          >
             {error.message}
           </p>
         )}
         {!isLoading && !error && scores?.length === 0 && (
-          <p className="p-6 text-center text-sm text-white/40">
-            No daily legends yet.
+          <p className="p-6 text-center font-mono text-xs text-white/55">
+            empty tape.
           </p>
         )}
-        <ol className="flex flex-col gap-1">
+        <ol>
           {scores?.slice(0, 10).map((user, index) => {
             const isCurrent = user.id === currentUserId;
             return (
               <li
-                className={`grid grid-cols-[2.2rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${
+                className={`grid grid-cols-[2.2rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-white/8 px-3 py-2.5 text-sm ${
                   isCurrent
-                    ? "bg-highlight-gold/10 ring-highlight-gold/30 text-white ring-1"
-                    : "text-white/62 odd:bg-white/3"
+                    ? "border-l-highlight-gold bg-highlight-gold/8 border-l-4 text-white"
+                    : "text-white/68"
                 }`}
                 key={user.id}
               >
                 <span
-                  className={`font-black ${index < 3 ? "text-highlight-gold" : "text-white/30"}`}
+                  className={`font-mono font-black ${index < 3 ? "text-highlight-gold" : "text-white/35"}`}
                 >
                   #{index + 1}
                 </span>
                 <span className="truncate font-bold">
                   {user.name}{" "}
                   {isCurrent && (
-                    <span className="text-highlight-gold">(You)</span>
+                    <span className="text-highlight-gold">(you)</span>
                   )}
                 </span>
-                <span className="flex items-center gap-2 font-black text-white tabular-nums">
+                <span className="font-mono font-black text-white tabular-nums">
                   {user.score}
-                  {isCurrent && (
-                    <UserRound
-                      className="text-highlight-gold size-3.5"
-                      aria-hidden="true"
-                    />
-                  )}
                 </span>
               </li>
             );

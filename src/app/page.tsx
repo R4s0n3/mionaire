@@ -2,15 +2,7 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import {
-  ArrowRight,
-  Gamepad2,
-  LogOut,
-  Medal,
-  Sparkles,
-  Trophy,
-  UserRound,
-} from "lucide-react";
+import { ArrowRight, Gamepad2, LogOut, Trophy } from "lucide-react";
 
 import BrandMark from "./_components/brand-mark";
 import { useAuth } from "./_components/auth-provider";
@@ -18,7 +10,7 @@ import { useAuth } from "./_components/auth-provider";
 type AuthMode = "login" | "register";
 
 const inputClassName =
-  "mt-1.5 w-full rounded-xl border border-white/15 bg-[#03061f]/70 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-secondary/70 focus:ring-4 focus:ring-secondary/10";
+  "mt-1.5 w-full rounded-sm border-2 border-white/20 bg-primary-dark px-3 py-2.5 text-base text-white outline-none placeholder:text-white/30 focus:border-secondary";
 
 function AuthPanel() {
   const { isLoading, login, loginWithDiscord, logout, register, user } =
@@ -85,77 +77,51 @@ function AuthPanel() {
   if (isLoading) {
     return (
       <div
-        className="flex min-h-80 flex-col items-center justify-center gap-4"
+        className="flex min-h-52 flex-col items-center justify-center gap-4"
         role="status"
       >
-        <BrandMark className="text-secondary animate-spin text-5xl" />
-        <p className="eyebrow">Preparing the studio</p>
+        <BrandMark className="text-secondary animate-spin text-4xl" />
+        <p className="eyebrow">checking player…</p>
       </div>
     );
   }
 
   if (user) {
-    const playerName = user.name ?? user.email ?? "Player";
+    const playerName = user.name ?? user.email ?? "player";
 
     return (
-      <div className="flex min-h-80 flex-col justify-between gap-8">
+      <div className="flex min-h-52 flex-col justify-between gap-8">
         <div>
-          <p className="eyebrow">Contestant confirmed</p>
-          <div className="mt-5 flex items-center gap-4">
-            {user.image ? (
-              // OAuth avatar hosts are provider-controlled.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.image}
-                alt=""
-                className="border-highlight-gold/70 size-14 rounded-full border-2 object-cover shadow-lg"
-              />
-            ) : (
-              <span className="border-secondary/40 bg-secondary/10 grid size-14 place-items-center rounded-full border">
-                <UserRound
-                  className="text-secondary size-6"
-                  aria-hidden="true"
-                />
-              </span>
-            )}
-            <div className="min-w-0">
-              <p className="text-xs tracking-[0.16em] text-white/45 uppercase">
-                Tonight&apos;s player
-              </p>
-              <h2 className="truncate text-2xl font-black text-white">
-                {playerName}
-              </h2>
-            </div>
-          </div>
-          <p className="mt-5 max-w-sm text-sm leading-6 text-white/58">
-            The lights are on and the money ladder is waiting. Take your seat
-            when you&apos;re ready.
+          <p className="eyebrow">signed in as</p>
+          <h2 className="mt-2 truncate text-3xl font-black text-white uppercase">
+            {playerName}
+          </h2>
+          <p className="mt-3 font-mono text-xs text-white/58">
+            signal good. questions loaded. probably.
           </p>
         </div>
 
         {error && (
           <p
-            className="rounded-xl border border-red-300/30 bg-red-400/10 p-3 text-sm text-red-100"
+            className="border-l-4 border-red-300 bg-red-400/10 p-3 text-sm text-red-100"
             role="alert"
           >
             {error}
           </p>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex gap-3">
           <Link href="/play" className="show-button flex-1">
-            Enter the hot seat{" "}
-            <ArrowRight className="size-4" aria-hidden="true" />
+            start <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
           <button
             type="button"
             onClick={() => void onSignOut()}
             disabled={isSubmitting}
-            className="show-button-secondary sm:px-4"
+            className="show-button-secondary !px-3"
             aria-label="Sign out"
           >
             <LogOut className="size-4" aria-hidden="true" />
-            <span className="sm:hidden">Sign out</span>
           </button>
         </div>
       </div>
@@ -164,19 +130,9 @@ function AuthPanel() {
 
   return (
     <div>
-      <div>
-        <p className="eyebrow">Contestant check-in</p>
-        <h2 className="mt-2 text-2xl font-black text-white">
-          {mode === "login" ? "Welcome back." : "Join the game."}
-        </h2>
-        <p className="mt-1 text-sm leading-6 text-white/50">
-          {mode === "login"
-            ? "Sign in and return to the hot seat."
-            : "Create your player profile in a few seconds."}
-        </p>
-      </div>
+      <p className="eyebrow">player access</p>
 
-      <div className="mt-5 grid grid-cols-2 rounded-full border border-white/10 bg-black/20 p-1">
+      <div className="bg-primary-dark mt-4 grid grid-cols-2 border-2 border-white/12 p-1">
         {(["login", "register"] as AuthMode[]).map((authMode) => (
           <button
             key={authMode}
@@ -185,47 +141,45 @@ function AuthPanel() {
               setMode(authMode);
               setError(null);
             }}
-            className={`rounded-full px-3 py-2 text-xs font-black tracking-[0.12em] uppercase transition ${
+            className={`px-3 py-2 font-mono text-xs font-black uppercase ${
               mode === authMode
-                ? "bg-white/12 text-white shadow-sm"
-                : "text-white/40 hover:text-white/70"
+                ? "bg-highlight-purple text-white"
+                : "text-white/45 hover:text-white"
             }`}
             aria-pressed={mode === authMode}
           >
-            {authMode === "login" ? "Sign in" : "Register"}
+            {authMode === "login" ? "sign in" : "new player"}
           </button>
         ))}
       </div>
 
       <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-3.5">
         {mode === "register" && (
-          <label className="text-xs font-bold tracking-[0.08em] text-white/68 uppercase">
-            Player name{" "}
-            <span className="font-normal text-white/30">· optional</span>
+          <label className="font-mono text-[0.68rem] font-bold text-white/70 uppercase">
+            player name{" "}
+            <span className="font-normal text-white/35">(optional)</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
               maxLength={12}
               autoComplete="nickname"
-              placeholder="Your stage name"
               className={inputClassName}
             />
           </label>
         )}
-        <label className="text-xs font-bold tracking-[0.08em] text-white/68 uppercase">
-          Email
+        <label className="font-mono text-[0.68rem] font-bold text-white/70 uppercase">
+          email
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
-            placeholder="player@example.com"
             required
             className={inputClassName}
           />
         </label>
-        <label className="text-xs font-bold tracking-[0.08em] text-white/68 uppercase">
-          Password
+        <label className="font-mono text-[0.68rem] font-bold text-white/70 uppercase">
+          password
           <input
             type="password"
             value={password}
@@ -235,7 +189,6 @@ function AuthPanel() {
             autoComplete={
               mode === "login" ? "current-password" : "new-password"
             }
-            placeholder="At least 8 characters"
             required
             className={inputClassName}
           />
@@ -243,7 +196,7 @@ function AuthPanel() {
 
         {error && (
           <p
-            className="rounded-xl border border-red-300/30 bg-red-400/10 p-3 text-sm text-red-100"
+            className="border-l-4 border-red-300 bg-red-400/10 p-3 text-sm text-red-100"
             role="alert"
           >
             {error}
@@ -256,31 +209,23 @@ function AuthPanel() {
           className="show-button mt-1 w-full"
         >
           {isSubmitting
-            ? "Please wait…"
+            ? "one moment…"
             : mode === "login"
-              ? "Enter the studio"
-              : "Create player"}
+              ? "sign in"
+              : "make account"}
           {!isSubmitting && (
             <ArrowRight className="size-4" aria-hidden="true" />
           )}
         </button>
 
-        <div className="flex items-center gap-3 py-0.5" aria-hidden="true">
-          <span className="h-px flex-1 bg-white/10" />
-          <span className="text-[0.65rem] font-bold tracking-[0.16em] text-white/30 uppercase">
-            or
-          </span>
-          <span className="h-px flex-1 bg-white/10" />
-        </div>
-
         <button
           type="button"
           onClick={() => void onDiscordSignIn()}
           disabled={isSubmitting}
-          className="show-button-secondary w-full normal-case"
+          className="show-button-secondary w-full !normal-case"
         >
           <Gamepad2 className="size-4 text-[#9ea7ff]" aria-hidden="true" />
-          Continue with Discord
+          use Discord instead
         </button>
       </form>
     </div>
@@ -290,72 +235,37 @@ function AuthPanel() {
 export default function Home() {
   return (
     <main className="show-stage text-body min-h-svh">
-      <div className="show-grid pointer-events-none absolute inset-0 -z-1" />
-
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 text-white no-underline"
-          aria-label="Mionaire home"
-        >
-          <BrandMark className="text-secondary text-3xl" />
-          <span className="text-sm font-black tracking-[0.22em]">MIONAIRE</span>
-        </Link>
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-5 sm:px-8">
+        <span className="broadcast-note">MIO-TV · ch. 15</span>
         <Link
           href="/leaderboard"
-          className="show-button-secondary !min-h-10 !px-4"
+          className="show-button-secondary !min-h-10 !px-3"
         >
           <Trophy className="text-highlight-gold size-4" aria-hidden="true" />
-          <span className="hidden sm:inline">Hall of fame</span>
-          <span className="sm:hidden">Scores</span>
+          scores
         </Link>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-5 pt-6 pb-12 sm:px-8 lg:min-h-[calc(100svh-88px)] lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-10 lg:pt-0">
+      <div className="mx-auto grid w-full max-w-5xl items-center gap-12 px-5 py-10 sm:px-8 lg:min-h-[calc(100svh-82px)] lg:grid-cols-[1fr_23rem] lg:gap-20 lg:py-6">
         <section className="flex flex-col items-center text-center lg:items-start lg:text-left">
-          <div className="brand-orbit mb-7 size-40 sm:size-48 lg:size-56">
-            <BrandMark className="animate-spin-slow text-secondary text-[7rem] drop-shadow-[0_0_24px_rgba(89,230,255,0.35)] sm:text-[8.5rem] lg:text-[10rem]" />
+          <div className="brand-orbit mb-8 size-36 sm:size-44">
+            <BrandMark className="animate-spin-slow text-secondary text-[6.5rem] sm:text-[8rem]" />
           </div>
-
-          <p className="eyebrow flex items-center gap-2">
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            The ultimate trivia night
-          </p>
-          <h1 className="mt-3 max-w-3xl text-[clamp(2.75rem,9vw,6.4rem)] leading-[0.84] font-black tracking-[-0.055em] text-white uppercase">
-            One question
-            <span className="from-highlight-gold to-highlight-purple block bg-gradient-to-r via-[#fff0bd] bg-clip-text text-transparent">
-              from glory.
-            </span>
+          <p className="eyebrow">a quiz program of some kind</p>
+          <h1 className="mt-3 text-[clamp(2.9rem,9vw,5.8rem)] leading-[0.86] font-black tracking-[-0.045em] text-white uppercase">
+            Will you be our
+            <span className="text-highlight-purple block">Mionaire?</span>
           </h1>
-          <p className="mt-6 max-w-xl text-base leading-7 text-white/60 sm:text-lg">
-            Fifteen questions. Two lifelines. One shot at the top prize. Trust
-            your instincts and climb the ladder to become a Mionaire.
+          <p className="mt-5 font-mono text-sm leading-6 text-white/62">
+            15 questions · 2 jokers · 1 missing letter
           </p>
-
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-xs font-bold tracking-[0.1em] text-white/45 uppercase lg:justify-start">
-            <span className="flex items-center gap-2">
-              <Medal
-                className="text-highlight-gold size-4"
-                aria-hidden="true"
-              />
-              $1,000,000 top prize
-            </span>
-            <span className="flex items-center gap-2">
-              <Sparkles className="text-secondary size-4" aria-hidden="true" />
-              Daily challenge
-            </span>
-          </div>
         </section>
 
         <section
-          className="glass-panel relative mx-auto w-full max-w-md overflow-hidden rounded-[2rem] p-6 sm:p-8"
+          className="glass-panel w-full p-5 sm:p-6"
           aria-label="Player access"
         >
-          <div className="bg-highlight-purple/12 absolute -top-24 -right-24 size-52 rounded-full blur-3xl" />
-          <div className="bg-secondary/8 absolute -bottom-28 -left-28 size-56 rounded-full blur-3xl" />
-          <div className="relative">
-            <AuthPanel />
-          </div>
+          <AuthPanel />
         </section>
       </div>
     </main>

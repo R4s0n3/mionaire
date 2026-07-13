@@ -3,20 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  AlertTriangle,
-  ArrowRight,
   CheckCircle2,
   Home,
   LockKeyhole,
-  RotateCcw,
-  Sparkles,
   Split,
-  Trophy,
   Users,
   XCircle,
 } from "lucide-react";
 
-import BrandMark from "@/app/_components/brand-mark";
 import LoadingSpinner from "@/app/_components/loading-spinner";
 import { useAuth } from "@/app/_components/auth-provider";
 import {
@@ -225,10 +219,7 @@ export default function Game({ game }: GameProps) {
     return (
       <div className="flex min-h-svh flex-col items-center justify-center gap-5 text-center">
         <LoadingSpinner />
-        <div>
-          <p className="eyebrow">The studio is getting ready</p>
-          <p className="mt-2 text-sm text-white/42">Loading your questions…</p>
-        </div>
+        <p className="broadcast-note">please stand by</p>
       </div>
     );
   }
@@ -242,49 +233,44 @@ export default function Game({ game }: GameProps) {
 
     return (
       <div className="relative flex min-h-svh items-center justify-center px-4 py-12 text-center">
-        <div className="show-grid pointer-events-none absolute inset-0 -z-1" />
-        <section className="glass-panel relative w-full max-w-2xl overflow-hidden rounded-[2rem] p-7 sm:p-12">
-          <div
-            className={`mx-auto grid size-20 place-items-center rounded-full border ${
-              won
-                ? "border-highlight-gold/60 bg-highlight-gold/12 text-highlight-gold"
-                : "border-secondary/35 bg-secondary/8 text-secondary"
-            }`}
-          >
-            {won ? (
-              <Trophy className="size-9" aria-hidden="true" />
-            ) : (
-              <XCircle className="size-9" aria-hidden="true" />
-            )}
-          </div>
-          <p className="eyebrow mt-6">
-            {won ? "The million is yours" : "The run is over"}
-          </p>
-          <h1 className="mt-3 text-4xl leading-none font-black tracking-[-0.04em] text-white uppercase sm:text-6xl">
+        <section className="glass-panel relative w-full max-w-xl p-6 sm:p-9">
+          <span className="broadcast-note">
+            {won ? "budget alert" : "end of tape"}
+          </span>
+          {won && (
+            // A weird little relic from the original project. It has earned this moment.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/dance.gif"
+              alt=""
+              className="mx-auto mt-5 h-28 w-auto motion-reduce:hidden"
+            />
+          )}
+          <h1 className="mt-6 text-4xl leading-none font-black text-white uppercase sm:text-6xl">
             {won
-              ? "You are a Mionaire!"
+              ? "You are a Mionaire."
               : lost
-                ? "What a run."
-                : "Game complete."}
+                ? "That's the show."
+                : "Transmission over."}
           </h1>
-          <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-white/58">
+          <p className="mx-auto mt-5 max-w-md font-mono text-sm leading-6 text-white/65">
             {won
-              ? "You conquered all fifteen questions and reached the top of the money ladder."
+              ? "somehow, you knew all fifteen. accounting has been notified."
               : lost
-                ? `The correct answer was ${gameResult.correctAnswer}. Your ladder high point before this question was $${previousStageAmount.toLocaleString()}.`
-                : "This game has ended. Start a new run when you are ready for another shot."}
+                ? `wrong. it was ${gameResult.correctAnswer}. previous rung: $${previousStageAmount.toLocaleString()}.`
+                : "the machine says this game is finished."}
           </p>
           {won && (
-            <p className="from-highlight-gold to-highlight-gold mt-7 bg-gradient-to-r via-white bg-clip-text text-5xl font-black text-transparent sm:text-7xl">
+            <p className="text-highlight-gold mt-6 font-mono text-4xl font-black sm:text-6xl">
               $1,000,000
             </p>
           )}
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/play" className="show-button">
-              <RotateCcw className="size-4" aria-hidden="true" /> Play again
+              again
             </Link>
             <Link href="/leaderboard" className="show-button-secondary">
-              <Trophy className="size-4" aria-hidden="true" /> Hall of fame
+              scores
             </Link>
           </div>
         </section>
@@ -295,24 +281,23 @@ export default function Game({ game }: GameProps) {
   if (fatalError || !data || !currentQuestion) {
     return (
       <div className="flex min-h-svh items-center justify-center px-4 text-center">
-        <section className="glass-panel w-full max-w-xl rounded-[2rem] p-8 sm:p-10">
-          <AlertTriangle
-            className="text-highlight-gold mx-auto size-10"
-            aria-hidden="true"
-          />
-          <p className="eyebrow mt-5">We hit a technical pause</p>
-          <h1 className="mt-3 text-3xl font-black text-white">
-            The game couldn&apos;t load.
+        <section className="glass-panel w-full max-w-lg p-7 sm:p-9">
+          <span className="broadcast-note">technical difficulties</span>
+          <h1 className="mt-6 text-4xl font-black text-white uppercase">
+            signal lost.
           </h1>
-          <p className="mt-4 text-sm leading-6 text-white/55" role="alert">
+          <p
+            className="mt-4 font-mono text-sm leading-6 text-white/65"
+            role="alert"
+          >
             {fatalError ?? "Game data was not available."}
           </p>
-          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/play" className="show-button">
-              New game
+              new game
             </Link>
             <Link href="/" className="show-button-secondary">
-              Home
+              home
             </Link>
           </div>
         </section>
@@ -344,28 +329,21 @@ export default function Game({ game }: GameProps) {
             <Home className="size-5" aria-hidden="true" />
           </Link>
         )}
-        <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 text-white">
-          <BrandMark className="text-secondary text-2xl" />
-          <span className="hidden text-xs font-black tracking-[0.2em] sm:inline">
-            MIONAIRE
-          </span>
-        </div>
-        <span className="text-[0.68rem] font-bold tracking-[0.12em] text-white/38 uppercase">
-          <span className="hidden sm:inline">Question </span>
-          {currentStage} / 15
+        <span className="broadcast-note absolute left-1/2 -translate-x-1/2">
+          MIO-TV
+        </span>
+        <span className="font-mono text-[0.68rem] font-bold text-white/58 uppercase">
+          Q {currentStage}/15
         </span>
       </header>
 
       <div className="grid flex-1 items-center gap-6 py-6 xl:grid-cols-[minmax(0,1fr)_17.5rem] xl:gap-8">
         <section className="mx-auto flex w-full max-w-5xl flex-col items-center">
-          <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="text-center sm:text-left">
-              <p className="eyebrow">Playing for</p>
-              <p className="text-highlight-gold mt-1 text-3xl font-black tracking-[-0.02em] sm:text-4xl">
-                ${currentAmount.toLocaleString()}
-              </p>
-            </div>
-
+          <div className="flex w-full flex-col items-center justify-between gap-4 border-b-2 border-dashed border-white/15 pb-4 sm:flex-row">
+            <p className="text-highlight-gold font-mono text-lg font-black">
+              Q {String(currentStage).padStart(2, "0")} / $
+              {currentAmount.toLocaleString()}
+            </p>
             <div className="flex items-center gap-2" aria-label="Lifelines">
               <button
                 type="button"
@@ -381,7 +359,7 @@ export default function Game({ game }: GameProps) {
                   className="text-highlight-gold size-4"
                   aria-hidden="true"
                 />
-                {isUsingFiftyFifty ? "Working…" : "50 : 50"}
+                {isUsingFiftyFifty ? "wait…" : "50 / 50"}
               </button>
               <button
                 type="button"
@@ -398,15 +376,13 @@ export default function Game({ game }: GameProps) {
                 }
               >
                 <Users className="text-secondary size-4" aria-hidden="true" />
-                {isUsingAudiencePoll ? "Polling…" : "Audience"}
+                {isUsingAudiencePoll ? "asking…" : "ask room"}
               </button>
             </div>
           </div>
 
-          <div className="glass-panel border-secondary/30 relative mt-7 w-full overflow-hidden rounded-[1.75rem] px-5 py-7 text-center sm:px-10 sm:py-9">
-            <div className="via-secondary/80 absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent to-transparent" />
-            <p className="eyebrow">Question {currentStage}</p>
-            <h1 className="mx-auto mt-4 max-w-4xl text-xl leading-snug font-black text-white sm:text-3xl lg:text-[2.15rem]">
+          <div className="border-secondary/45 mt-5 w-full border-y-2 px-3 py-7 text-center sm:px-8 sm:py-9">
+            <h1 className="mx-auto max-w-4xl text-xl leading-snug font-black text-white sm:text-3xl lg:text-[2.15rem]">
               {currentQuestion.question}
             </h1>
           </div>
@@ -462,38 +438,29 @@ export default function Game({ game }: GameProps) {
 
           {audiencePollResults && (
             <section
-              className="glass-panel mt-5 w-full rounded-2xl p-4 sm:p-5"
+              className="mt-5 w-full border-y-2 border-dashed border-white/15 py-4"
               aria-labelledby="audience-poll-title"
             >
-              <div className="flex items-center justify-between">
-                <h2
-                  id="audience-poll-title"
-                  className="flex items-center gap-2 text-sm font-black text-white"
-                >
-                  <Users className="text-secondary size-4" aria-hidden="true" />{" "}
-                  Audience poll
-                </h2>
-                <span className="text-[0.65rem] tracking-[0.1em] text-white/35 uppercase">
-                  Studio vote
-                </span>
-              </div>
-              <div className="mt-4 grid grid-cols-4 items-end gap-2 sm:gap-4">
+              <h2 id="audience-poll-title" className="eyebrow">
+                the audience has spoken (badly)
+              </h2>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 sm:gap-x-5">
                 {audiencePollResults.map(({ answer, percent }) => (
                   <div
                     key={answer}
-                    className="flex flex-col items-center gap-2"
+                    className="grid grid-cols-[1.5rem_1fr_2.5rem] items-center gap-2"
                   >
-                    <span className="text-xs font-black text-white">
-                      {percent}%
+                    <span className="text-highlight-gold font-mono text-xs font-black">
+                      {answer}
                     </span>
-                    <div className="flex h-16 w-full items-end overflow-hidden rounded-t-md bg-white/5 sm:h-20">
+                    <div className="bg-primary-dark h-3 overflow-hidden">
                       <div
-                        className="from-highlight-purple to-secondary w-full bg-gradient-to-t transition-[height] duration-500"
-                        style={{ height: `${percent}%` }}
+                        className="bg-highlight-purple h-full"
+                        style={{ width: `${percent}%` }}
                       />
                     </div>
-                    <span className="option-key !size-7 text-[0.65rem]">
-                      {answer}
+                    <span className="font-mono text-xs text-white/65">
+                      {percent}%
                     </span>
                   </div>
                 ))}
@@ -503,23 +470,14 @@ export default function Game({ game }: GameProps) {
 
           {notice && (
             <p
-              className="mt-4 w-full rounded-xl border border-red-300/30 bg-red-400/10 p-3 text-center text-sm text-red-100"
+              className="mt-4 w-full border-l-4 border-red-300 bg-red-400/10 p-3 font-mono text-xs text-red-100"
               role="alert"
             >
               {notice}
             </p>
           )}
 
-          <div className="mt-5 flex w-full flex-col items-center justify-between gap-3 sm:flex-row">
-            <p className="text-center text-xs leading-5 text-white/38 sm:text-left">
-              {rightAnswer
-                ? rightAnswer === pickedAnswer
-                  ? "Correct — moving up the ladder…"
-                  : "The correct answer is highlighted."
-                : pickedAnswer
-                  ? `Answer ${pickedAnswer} selected. Change it or make it final.`
-                  : "Choose carefully. Nothing is final until you lock it in."}
-            </p>
+          <div className="mt-5 flex w-full justify-end">
             <button
               type="button"
               onClick={lockAnswer}
@@ -528,12 +486,12 @@ export default function Game({ game }: GameProps) {
             >
               {isEvaluating ? (
                 <>
-                  <LoadingSpinner compact /> Final answer…
+                  <LoadingSpinner compact /> computer says…
                 </>
               ) : (
                 <>
-                  <LockKeyhole className="size-4" aria-hidden="true" /> Lock in
-                  answer
+                  <LockKeyhole className="size-4" aria-hidden="true" />
+                  {pickedAnswer ? `lock ${pickedAnswer}` : "final answer?"}
                 </>
               )}
             </button>
@@ -546,13 +504,6 @@ export default function Game({ game }: GameProps) {
 
         <SideBar currentStage={currentStage} />
       </div>
-
-      <footer className="flex items-center justify-center gap-2 pb-2 text-[0.65rem] tracking-[0.1em] text-white/22 uppercase">
-        <Sparkles className="size-3" aria-hidden="true" /> Trust your first
-        instinct
-        <ArrowRight className="size-3" aria-hidden="true" /> Play for the
-        million
-      </footer>
     </div>
   );
 }

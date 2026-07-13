@@ -5,12 +5,8 @@ import { AuthProvider } from "./_components/auth-provider";
 import GoogleAdsense from "./_components/ad-sense";
 
 export const metadata: Metadata = {
-  title: {
-    default: "Mionaire — The Ultimate Quiz Show",
-    template: "%s | Mionaire",
-  },
-  description:
-    "Take the hot seat, climb the money ladder, and see if you have what it takes to become a Mionaire.",
+  title: "Mionaire",
+  description: "Fifteen questions. Two jokers. One missing letter.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
