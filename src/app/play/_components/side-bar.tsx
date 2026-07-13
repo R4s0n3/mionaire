@@ -1,246 +1,136 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { HomeIcon, SidebarClose, SidebarOpen } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ListOrdered, Sparkles, X } from "lucide-react";
+
 import { stages } from "@/util/stages";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 
-interface JokerProps {
-  fiftyFiftyUsed: boolean;
-  audiencePollUsed: boolean;
-  fiftyFiftyPending: boolean;
-  audiencePollPending: boolean;
-  triggerFiftyFifty?: () => void | Promise<void>;
-  triggerAudiencePoll?: () => void | Promise<void>;
-  audiencePollResults: { answer: string; percent: number }[] | null;
-}
-
-export default function SideBar({
-  currentStage,
-  fiftyFiftyUsed,
-  audiencePollUsed,
-  fiftyFiftyPending,
-  audiencePollPending,
-  triggerFiftyFifty,
-  triggerAudiencePoll,
-  audiencePollResults,
-}: { currentStage: number } & JokerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+function PrizeLadder({ currentStage }: { currentStage: number }) {
+  const activeRowRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
-    const updateViewport = () => setIsDesktop(mediaQuery.matches);
+    activeRowRef.current?.scrollIntoView({ block: "center" });
+  }, [currentStage]);
 
-    updateViewport();
-    mediaQuery.addEventListener("change", updateViewport);
+  return (
+    <ol className="flex flex-col gap-1" aria-label="Prize ladder">
+      {stages
+        .map((stage, index) => ({ ...stage, number: index + 1 }))
+        .reverse()
+        .map((stage) => {
+          const active = stage.number === currentStage;
+          const complete = stage.number < currentStage;
+          const milestone = [5, 10, 15].includes(stage.number);
 
-    return () => mediaQuery.removeEventListener("change", updateViewport);
-  }, []);
+          return (
+            <li
+              key={stage.number}
+              ref={active ? activeRowRef : undefined}
+              className="prize-row"
+              data-active={active}
+              data-complete={complete}
+              data-milestone={milestone}
+              aria-current={active ? "step" : undefined}
+            >
+              <span className="text-right text-[0.68rem] opacity-70">
+                {stage.number}
+              </span>
+              <span className="flex items-center justify-between gap-2">
+                <span>${stage.amount.toLocaleString()}</span>
+                {milestone && !active && (
+                  <Sparkles className="size-3 opacity-60" aria-hidden="true" />
+                )}
+              </span>
+            </li>
+          );
+        })}
+    </ol>
+  );
+}
 
-  const handleFiftyFifty = () => {
-    void triggerFiftyFifty?.();
-  };
+export default function SideBar({ currentStage }: { currentStage: number }) {
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleAudiencePoll = () => {
-    void triggerAudiencePoll?.();
-  };
+  useEffect(() => {
+    if (!isOpen) return;
 
-  const sidebarVariants = {
-    open: {
-      width: "100%",
-      height: "24rem",
-      transition: {
-        type: "spring" as const,
-        stiffness: 200,
-        damping: 25,
-        staggerChildren: 0.03,
-        delayChildren: 0.05,
-      },
-    },
-    closed: {
-      width: "100%",
-      height: "3rem",
-      transition: {
-        type: "spring" as const,
-        stiffness: 250,
-        damping: 30,
-      },
-    },
-    openDesktop: {
-      width: "16rem",
-      height: "100vh",
-      transition: {
-        type: "spring" as const,
-        stiffness: 200,
-        damping: 25,
-        staggerChildren: 0.03,
-        delayChildren: 0.05,
-      },
-    },
-    closedDesktop: {
-      width: "3rem",
-      height: "100vh",
-      transition: {
-        type: "spring" as const,
-        stiffness: 250,
-        damping: 30,
-      },
-    },
-  };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
 
-  const stageItemVariants = {
-    open: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.2 },
-    },
-    closed: {
-      opacity: 0,
-      y: 10,
-      transition: { duration: 0.15 },
-    },
-  };
-
-  const textVariants = {
-    open: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.2 },
-    },
-    closed: {
-      opacity: 0,
-      x: -5,
-      transition: { duration: 0.15 },
-    },
-  };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen]);
 
   return (
     <>
-      <div className="absolute right-2 bottom-20 z-50 flex gap-2 lg:top-2 lg:right-16">
-        <button
-          type="button"
-          onClick={handleFiftyFifty}
-          disabled={fiftyFiftyUsed || fiftyFiftyPending}
-          className={`flex size-12 items-center justify-center rounded-full border-2 font-bold ${
-            fiftyFiftyUsed || fiftyFiftyPending
-              ? "border-gray-500 bg-gray-500/30 text-gray-500"
-              : "border-highlight-yellow bg-highlight-yellow/20 text-highlight-yellow hover:scale-110"
-          }`}
-          title="50:50 Joker"
-        >
-          50:50
-        </button>
-        <button
-          type="button"
-          onClick={handleAudiencePoll}
-          disabled={audiencePollUsed || audiencePollPending}
-          className={`flex size-12 items-center justify-center rounded-full border-2 font-bold ${
-            audiencePollUsed || audiencePollPending
-              ? "border-gray-500 bg-gray-500/30 text-gray-500"
-              : "border-highlight-green bg-highlight-green/20 text-highlight-green hover:scale-110"
-          }`}
-          title="Audience Poll Joker"
-        >
-          %
-        </button>
-      </div>
-
-      {audiencePollResults && (
-        <motion.div
-          className="border-primary-light bg-primary-dark absolute top-16 right-2 z-50 w-48 rounded-lg border-2 p-2"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <div className="mb-2 text-center text-sm font-bold">
-            Audience Poll
-          </div>
-          {audiencePollResults.map(({ answer, percent }) => (
-            <div key={answer} className="flex items-center gap-2 text-sm">
-              <span className="w-4 font-bold">{answer}</span>
-              <div className="bg-primary h-3 flex-1 overflow-hidden rounded">
-                <div
-                  className="bg-highlight-purple/70 h-full"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-              <span className="w-8 text-right">{percent}%</span>
-            </div>
-          ))}
-        </motion.div>
-      )}
-
-      <motion.div
-        className={`border-primary-light bg-primary-dark absolute top-0 right-0 flex max-h-screen w-full scroll-pt-48 flex-col items-start justify-between overflow-hidden border-b-2 lg:h-screen lg:border-b-0 lg:border-l-2`}
-        variants={sidebarVariants}
-        initial={false}
-        animate={
-          isOpen
-            ? isDesktop
-              ? "openDesktop"
-              : "open"
-            : isDesktop
-              ? "closedDesktop"
-              : "closed"
-        }
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className="icon-button fixed top-4 right-4 z-30 xl:hidden"
+        aria-label="Open prize ladder"
+        aria-expanded={isOpen}
       >
-        <motion.button
-          className="p-2"
-          onClick={() => setIsOpen((prev) => !prev)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          {isOpen ? (
-            <SidebarOpen className="size-8" />
-          ) : (
-            <SidebarClose className="size-8" />
-          )}
-        </motion.button>
+        <ListOrdered className="size-5" aria-hidden="true" />
+      </button>
 
-        <div className="flex w-full flex-col overflow-y-auto text-xl">
-          {stages
-            .slice()
-            .reverse()
-            .map((stage, idx) => (
-              <motion.div
-                key={`stage-${stages.length - idx}`}
-                className={`flex p-2 ${isOpen ? "justify-between" : "justify-center"} ${idx % 2 ? "bg-primary" : "bg-primary-light"} ${stages.length - idx === currentStage && "text-highlight-purple"}`}
-                variants={stageItemVariants}
-                initial="closed"
-                animate="open"
-                custom={idx}
-              >
-                <span className="flex aspect-square items-center justify-center text-center">
-                  {stages.length - idx}
-                </span>
-
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.span
-                      variants={textVariants}
-                      initial="closed"
-                      animate="open"
-                      exit="closed"
-                    >
-                      ${stage.amount.toLocaleString()}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
+      <aside className="glass-panel hidden h-fit max-h-[calc(100svh-7rem)] flex-col overflow-hidden rounded-3xl xl:flex">
+        <div className="border-b border-white/8 p-5">
+          <p className="eyebrow">Money ladder</p>
+          <div className="mt-1.5 flex items-end justify-between gap-3">
+            <h2 className="text-xl font-black text-white">15 questions</h2>
+            <span className="text-xs text-white/38">
+              You&apos;re on {currentStage}
+            </span>
+          </div>
         </div>
+        <div className="overflow-y-auto p-3">
+          <PrizeLadder currentStage={currentStage} />
+        </div>
+      </aside>
 
-        <motion.div
-          className="p-2"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Link href="/">
-            <HomeIcon className="size-8" />
-          </Link>
-        </motion.div>
-      </motion.div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end bg-black/65 backdrop-blur-sm xl:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.aside
+              className="glass-panel max-h-[84svh] w-full overflow-hidden rounded-t-[2rem] border-b-0"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 280, damping: 30 }}
+              onClick={(event) => event.stopPropagation()}
+              aria-label="Prize ladder"
+            >
+              <div className="flex items-center justify-between border-b border-white/8 p-5">
+                <div>
+                  <p className="eyebrow">Money ladder</p>
+                  <h2 className="mt-1 text-xl font-black text-white">
+                    Question {currentStage} of 15
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="icon-button"
+                  aria-label="Close prize ladder"
+                >
+                  <X className="size-5" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="max-h-[calc(84svh-6rem)] overflow-y-auto p-4">
+                <PrizeLadder currentStage={currentStage} />
+              </div>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

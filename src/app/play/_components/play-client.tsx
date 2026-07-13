@@ -18,14 +18,15 @@ export default function PlayClient({ gameId }: { gameId?: string }) {
 
   if (isLoading || !user) {
     return (
-      <main className="text-body from-primary to-primary-dark flex min-h-screen flex-col items-center justify-center bg-gradient-to-b">
+      <main className="show-stage text-body flex min-h-svh flex-col items-center justify-center">
         <LoadingSpinner />
       </main>
     );
   }
 
   return (
-    <main className="text-body from-primary to-primary-dark flex min-h-screen flex-col items-center justify-center bg-gradient-to-b">
+    <main className="show-stage text-body min-h-svh">
+      <div className="show-grid pointer-events-none absolute inset-0 -z-1" />
       {gameId ? <Game game={gameId} /> : <PickMode />}
     </main>
   );

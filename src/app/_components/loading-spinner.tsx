@@ -1,8 +1,19 @@
-import Image from "next/image";
-export default function LoadingSpinner() {
+import BrandMark from "./brand-mark";
+
+export default function LoadingSpinner({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   return (
-    <div className="relative size-16">
-      <Image src={"/logo.svg"} alt="logo" fill className="animate-spin" />
-    </div>
+    <span
+      className="inline-grid place-items-center"
+      role={compact ? undefined : "status"}
+    >
+      <BrandMark
+        className={`text-secondary animate-spin ${compact ? "text-base" : "text-6xl"}`}
+      />
+      {!compact && <span className="sr-only">Loading</span>}
+    </span>
   );
 }

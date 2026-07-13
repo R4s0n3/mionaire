@@ -10,6 +10,7 @@ import {
   Trophy,
 } from "lucide-react";
 
+import BrandMark from "@/app/_components/brand-mark";
 import { apiClient } from "@/lib/api-client";
 import { useApiQuery } from "@/hooks/use-api-query";
 
@@ -18,97 +19,130 @@ export default function PlayerStatsCard() {
     const { stats } = await apiClient.getPlayerStats();
     return stats;
   }, []);
-  const { data: stats, isLoading } = useApiQuery(query);
+  const { data: stats, error, isLoading } = useApiQuery(query);
 
-  if (isLoading || !stats) return null;
+  if (isLoading) {
+    return (
+      <div
+        className="glass-panel rounded-3xl p-6 text-center text-sm text-white/42"
+        role="status"
+      >
+        Loading your player card…
+      </div>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <div
+        className="glass-panel rounded-3xl p-5 text-center text-sm text-red-100"
+        role="alert"
+      >
+        {error?.message ??
+          "Your player statistics are not available right now."}
+      </div>
+    );
+  }
+
+  const metrics = [
+    {
+      label: "Best stage",
+      value: `Stage ${stats.bestStage}`,
+      icon: Target,
+      color: "text-secondary",
+    },
+    {
+      label: "Today",
+      value: stats.dailyScoreToday,
+      icon: Calendar,
+      color: "text-green-300",
+    },
+    {
+      label: "Daily total",
+      value: stats.dailyScoreAllTime,
+      icon: Trophy,
+      color: "text-highlight-gold",
+    },
+    {
+      label: "Games played",
+      value: stats.gamesPlayed,
+      icon: TrendingUp,
+      color: "text-highlight-purple",
+    },
+  ];
 
   return (
-    <div className="from-primary via-primary to-primary-dark border-highlight-purple relative w-full max-w-5xl overflow-hidden rounded-2xl border-2 bg-gradient-to-br shadow-2xl">
-      <div className="absolute inset-0 bg-[url('/logo.png')] bg-center bg-no-repeat opacity-5" />
-
-      <div className="relative flex flex-col gap-6 p-6 md:p-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="glass-panel border-highlight-purple/25 relative mx-auto w-full max-w-5xl overflow-hidden rounded-[2rem]">
+      <BrandMark className="text-highlight-purple/4 pointer-events-none absolute -top-20 -right-20 text-[20rem]" />
+      <div className="relative p-6 sm:p-8">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
             {stats.image ? (
-              // OAuth avatar hosts are provider-controlled and cannot be safely
-              // enumerated in Next.js image configuration.
+              // OAuth avatar hosts are provider-controlled.
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={stats.image}
-                alt={stats.name}
-                className="border-highlight-gold h-16 w-16 rounded-full border-2 shadow-lg"
+                alt=""
+                className="border-highlight-gold/65 size-16 flex-none rounded-full border-2 object-cover shadow-lg"
               />
             ) : (
-              <div className="bg-highlight-purple border-highlight-gold flex h-16 w-16 items-center justify-center rounded-full border-2 shadow-lg">
-                <span className="text-highlight-gold text-2xl font-bold">
+              <div className="border-highlight-gold/50 bg-highlight-purple/15 grid size-16 flex-none place-items-center rounded-full border-2">
+                <span className="text-highlight-gold text-2xl font-black">
                   {stats.name.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <div>
-              <h2 className="text-2xl font-black tracking-wide text-white uppercase">
+            <div className="min-w-0">
+              <p className="eyebrow">Your player card</p>
+              <h2 className="mt-1 truncate text-2xl font-black tracking-wide text-white uppercase">
                 {stats.name}
               </h2>
-              <div className="mt-1 flex items-center gap-2">
-                <Crown size={16} className="text-highlight-gold" />
-                <span className="text-highlight-gold font-semibold">
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                <Crown
+                  size={15}
+                  className="text-highlight-gold"
+                  aria-hidden="true"
+                />
+                <span className="text-highlight-gold font-bold">
                   Rank #{stats.overallRank}
                 </span>
                 {stats.isMionaire && (
-                  <>
-                    <span className="text-white">•</span>
-                    <span className="flex items-center gap-1 font-semibold text-green-400">
-                      <Star size={14} className="fill-green-400" />
-                      Mionaire
-                    </span>
-                  </>
+                  <span className="flex items-center gap-1 rounded-full bg-green-300/10 px-2 py-0.5 text-xs font-bold text-green-300">
+                    <Star
+                      size={12}
+                      className="fill-green-300"
+                      aria-hidden="true"
+                    />{" "}
+                    Mionaire
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="text-right">
-            <p className="text-sm tracking-wider text-gray-300 uppercase">
-              Allstars Score
+          <div className="border-highlight-gold/20 bg-highlight-gold/6 rounded-2xl border px-5 py-4 text-left sm:text-right">
+            <p className="text-[0.65rem] font-bold tracking-[0.15em] text-white/38 uppercase">
+              All-stars score
             </p>
-            <p className="text-highlight-gold text-4xl font-black">
+            <p className="text-highlight-gold mt-1 text-4xl font-black tabular-nums">
               {stats.overallScore.toLocaleString()}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="flex flex-col items-center gap-1 rounded-xl bg-white/10 p-4">
-            <Target size={20} className="text-blue-400" />
-            <p className="text-xs text-gray-300 uppercase">Best Stage</p>
-            <p className="text-xl font-bold text-white">
-              Stage {stats.bestStage}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-1 rounded-xl bg-white/10 p-4">
-            <Calendar size={20} className="text-green-400" />
-            <p className="text-xs text-gray-300 uppercase">
-              Today&apos;s Daily
-            </p>
-            <p className="text-xl font-bold text-white">
-              {stats.dailyScoreToday}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-1 rounded-xl bg-white/10 p-4">
-            <Trophy size={20} className="text-amber-400" />
-            <p className="text-xs text-gray-300 uppercase">Daily All-Time</p>
-            <p className="text-xl font-bold text-white">
-              {stats.dailyScoreAllTime}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-1 rounded-xl bg-white/10 p-4">
-            <TrendingUp size={20} className="text-purple-400" />
-            <p className="text-xs text-gray-300 uppercase">Games Played</p>
-            <p className="text-xl font-bold text-white">{stats.gamesPlayed}</p>
-          </div>
+        <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {metrics.map(({ label, value, icon: Icon, color }) => (
+            <div
+              key={label}
+              className="rounded-2xl border border-white/7 bg-white/4 p-4"
+            >
+              <Icon className={`size-4 ${color}`} aria-hidden="true" />
+              <p className="mt-3 text-[0.63rem] font-bold tracking-[0.11em] text-white/35 uppercase">
+                {label}
+              </p>
+              <p className="mt-1 text-lg font-black text-white">{value}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

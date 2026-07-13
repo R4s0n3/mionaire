@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Trophy, User } from "lucide-react";
+import { Crown, UserRound } from "lucide-react";
 
 import { apiClient } from "@/lib/api-client";
 import { useApiQuery } from "@/hooks/use-api-query";
@@ -15,43 +15,74 @@ export default function DailyScores({ currentUserId }: DailyScoresProps) {
     () => apiClient.getDailyScores().then(({ scores }) => scores),
     [],
   );
-  const { data: dailyScores, error, isLoading } = useApiQuery(query);
+  const { data: scores, error, isLoading } = useApiQuery(query);
 
   return (
-    <div className="relative flex aspect-video size-full flex-col items-center overflow-y-auto rounded-xl border border-amber-400 bg-gradient-to-br from-amber-500/90 to-amber-700/60 shadow-xl">
-      <h5 className="sticky top-0 flex w-full items-center justify-center gap-1.5 bg-amber-600 p-2 px-4 text-white">
-        <Trophy size={14} />
-        Daily Legends
-        <Trophy size={14} />
-      </h5>
-      {isLoading && (
-        <p className="p-4 text-center text-white">Loading scores…</p>
-      )}
-      {error && <p className="p-4 text-center text-red-100">{error.message}</p>}
-      {!isLoading && !error && dailyScores?.length === 0 && (
-        <div className="flex w-full justify-between bg-amber-500/40 p-2 px-4">
-          <p className="w-full text-center text-white">No daily scores yet.</p>
+    <section className="glass-panel flex min-h-80 flex-col overflow-hidden rounded-3xl">
+      <header className="flex items-center gap-4 border-b border-white/8 p-5">
+        <span className="bg-highlight-gold/10 text-highlight-gold grid size-11 flex-none place-items-center rounded-xl">
+          <Crown className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="eyebrow !text-highlight-gold">All-time daily</p>
+          <h2 className="mt-0.5 text-xl font-black text-white">
+            Daily legends
+          </h2>
         </div>
-      )}
-      {dailyScores?.slice(0, 10).map((user, index) => (
-        <div
-          className={`flex w-full items-center gap-4 bg-amber-500/20 p-2 px-4 text-sm ${
-            index % 2 ? "bg-amber-500/40 text-white" : ""
-          } ${
-            user.id === currentUserId
-              ? "ring-2 ring-white ring-offset-2 ring-offset-amber-500/60"
-              : ""
-          }`}
-          key={user.id}
-        >
-          <span className="text-white">#{index + 1}</span>
-          <span className="truncate text-white">{user.name}</span>
-          <span className="ml-auto text-center text-white">{user.score}</span>
-          {user.id === currentUserId && (
-            <User size={14} className="text-white" />
-          )}
-        </div>
-      ))}
-    </div>
+      </header>
+      <div className="flex-1 p-3">
+        {isLoading && (
+          <p className="p-6 text-center text-sm text-white/45" role="status">
+            Loading daily legends…
+          </p>
+        )}
+        {error && (
+          <p className="p-6 text-center text-sm text-red-200" role="alert">
+            {error.message}
+          </p>
+        )}
+        {!isLoading && !error && scores?.length === 0 && (
+          <p className="p-6 text-center text-sm text-white/40">
+            No daily legends yet.
+          </p>
+        )}
+        <ol className="flex flex-col gap-1">
+          {scores?.slice(0, 10).map((user, index) => {
+            const isCurrent = user.id === currentUserId;
+            return (
+              <li
+                className={`grid grid-cols-[2.2rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${
+                  isCurrent
+                    ? "bg-highlight-gold/10 ring-highlight-gold/30 text-white ring-1"
+                    : "text-white/62 odd:bg-white/3"
+                }`}
+                key={user.id}
+              >
+                <span
+                  className={`font-black ${index < 3 ? "text-highlight-gold" : "text-white/30"}`}
+                >
+                  #{index + 1}
+                </span>
+                <span className="truncate font-bold">
+                  {user.name}{" "}
+                  {isCurrent && (
+                    <span className="text-highlight-gold">(You)</span>
+                  )}
+                </span>
+                <span className="flex items-center gap-2 font-black text-white tabular-nums">
+                  {user.score}
+                  {isCurrent && (
+                    <UserRound
+                      className="text-highlight-gold size-3.5"
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
   );
 }
