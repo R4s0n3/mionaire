@@ -16,7 +16,7 @@ export default function Leaderboard() {
   return (
     <main className="show-stage text-body min-h-svh">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-5 sm:px-8">
-        <span className="broadcast-note">MIO-TV · archive</span>
+        <span className="broadcast-note">MIONAIRE · archive</span>
         <Link href="/" className="show-button-secondary !min-h-10 !px-3">
           <ArrowLeft className="size-4" aria-hidden="true" /> home
         </Link>

@@ -330,7 +330,7 @@ export default function Game({ game }: GameProps) {
           </Link>
         )}
         <span className="broadcast-note absolute left-1/2 -translate-x-1/2">
-          MIO-TV
+          MIONAIRE
         </span>
         <span className="font-mono text-[0.68rem] font-bold text-white/58 uppercase">
           Q {currentStage}/15
@@ -406,11 +406,10 @@ export default function Game({ game }: GameProps) {
                   key={key}
                   disabled={isEvaluating || hidden}
                   onClick={() => selectAnswer(key)}
-                  className={`answer-option ${
-                    rightAnswer && (state === "correct" || state === "wrong")
+                  className={`answer-option ${rightAnswer && (state === "correct" || state === "wrong")
                       ? "animate-blink"
                       : ""
-                  }`}
+                    }`}
                   data-state={state}
                   aria-hidden={hidden}
                   aria-pressed={pickedAnswer === key}

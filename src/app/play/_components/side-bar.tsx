@@ -114,7 +114,7 @@ export default function SideBar({ currentStage }: { currentStage: number }) {
             >
               <div className="flex items-center justify-between border-b-2 border-dashed border-white/15 p-4">
                 <div>
-                  <p className="eyebrow">MIO-TV</p>
+                  <p className="eyebrow">MIONAIRE</p>
                   <h2
                     id="mobile-ladder-title"
                     className="mt-1 font-mono text-sm font-black text-white uppercase"

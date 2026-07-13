@@ -141,11 +141,10 @@ function AuthPanel() {
               setMode(authMode);
               setError(null);
             }}
-            className={`px-3 py-2 font-mono text-xs font-black uppercase ${
-              mode === authMode
+            className={`px-3 py-2 font-mono text-xs font-black uppercase ${mode === authMode
                 ? "bg-highlight-purple text-white"
                 : "text-white/45 hover:text-white"
-            }`}
+              }`}
             aria-pressed={mode === authMode}
           >
             {authMode === "login" ? "sign in" : "new player"}
@@ -236,7 +235,7 @@ export default function Home() {
   return (
     <main className="show-stage text-body min-h-svh">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-5 sm:px-8">
-        <span className="broadcast-note">MIO-TV · ch. 15</span>
+        <span className="broadcast-note">MIONAIRE</span>
         <Link
           href="/leaderboard"
           className="show-button-secondary !min-h-10 !px-3"

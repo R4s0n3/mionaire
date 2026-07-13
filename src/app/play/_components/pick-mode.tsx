@@ -93,7 +93,7 @@ export default function PickMode() {
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-4xl flex-col px-4 py-5 sm:px-7">
       <header className="flex items-center justify-between">
-        <span className="broadcast-note">MIO-TV · menu</span>
+        <span className="broadcast-note">MIONAIRE · menu</span>
         <Link href="/" className="show-button-secondary !min-h-10 !px-3">
           <ArrowLeft className="size-4" aria-hidden="true" /> back
         </Link>
@@ -145,11 +145,10 @@ export default function PickMode() {
                     key={type}
                     type="button"
                     onClick={() => setGameType(type)}
-                    className={`min-h-12 border-2 px-4 font-mono text-sm font-black uppercase ${
-                      selected
+                    className={`min-h-12 border-2 px-4 font-mono text-sm font-black uppercase ${selected
                         ? "border-secondary bg-secondary text-primary-dark"
                         : "bg-primary-dark border-white/18 text-white/58 hover:border-white/45 hover:text-white"
-                    }`}
+                      }`}
                     aria-pressed={selected}
                   >
                     {selected ? "> " : ""}
@@ -177,11 +176,10 @@ export default function PickMode() {
                     key={mode}
                     type="button"
                     onClick={() => setGameMode(mode)}
-                    className={`min-h-12 border-2 px-2 font-mono text-xs font-black uppercase sm:text-sm ${
-                      selected
+                    className={`min-h-12 border-2 px-2 font-mono text-xs font-black uppercase sm:text-sm ${selected
                         ? "border-highlight-gold bg-highlight-gold text-primary-dark"
                         : "bg-primary-dark border-white/18 text-white/58 hover:border-white/45 hover:text-white"
-                    }`}
+                      }`}
                     aria-pressed={selected}
                   >
                     {mode}
